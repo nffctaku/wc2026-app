@@ -3,6 +3,136 @@
   --foreground: #171717;
 }
 
+.appHeader {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 84px;
+  padding: 0 16px;
+  background: #0b1f3a;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.appDrawerOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 20;
+}
+
+.appDrawerOverlayOpen {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.appDrawer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100dvh;
+  width: min(78vw, 320px);
+  transform: translateX(-100%);
+  transition: transform 220ms ease;
+  z-index: 30;
+  background: linear-gradient(90deg, #05060c 0%, #0b1f3a 55%, #2b1d5f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.appDrawerOpen {
+  transform: translateX(0);
+}
+
+.appDrawerNav {
+  padding: 84px 16px 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.appDrawerItem {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 12px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.appDrawerIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  margin-right: 10px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .appDrawerItem:hover {
+    background: rgba(0, 0, 0, 0.28);
+  }
+}
+
+.appHamburger {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.appHamburgerLine {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 999px;
+}
+
+.appHamburgerLineShort {
+  width: 50%;
+  margin-right: auto;
+}
+
+@media (min-width: 768px) {
+  .appHamburger {
+    display: none;
+  }
+}
+
+.appHeader a {
+  color: #ffffff;
+}
+
+.appHeaderLogoLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.appHeaderLogo {
+  height: auto;
+}
+
+.appMain {
+  width: 100%;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
