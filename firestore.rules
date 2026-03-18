@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN';
+    }
+
+    match /users/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid;
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      allow update: if signedIn() && request.auth.uid == uid &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['nickname', 'photoURL', 'updatedAt']);
+
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    match /teams/{teamId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /matches/{matchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tournamentConfig/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /predictions/{predId} {
+      allow read: if signedIn() && (
+        resource.data.uid == request.auth.uid || isAdmin()
+      );
+
+      allow create: if signedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.keys().hasAll(['uid', 'matchId', 'homeScore', 'awayScore']);
+
+      allow update: if signedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.matchId == resource.data.matchId;
+
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /userMatchPoints/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /userStats/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
