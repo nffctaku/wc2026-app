@@ -70,15 +70,27 @@ function IconX() {
   );
 }
 
+function IconTable() {
+  return (
+    <svg viewBox="0 0 24 24" className="appDrawerIcon" aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 4v12h16V7H4Zm0-2v2h16V5H4Zm2 5h4v2H6v-2Zm0 4h4v2H6v-2Zm6-4h6v2h-6v-2Zm0 4h6v2h-6v-2Z"
+      />
+    </svg>
+  );
+}
+
 type MenuItem = {
   label: string;
   href: string;
-  icon: "trophy" | "flag" | "pencil" | "user" | "mail" | "x";
+  icon: "trophy" | "table" | "flag" | "pencil" | "user" | "mail" | "x";
   external?: boolean;
 };
 
 const menuItems: MenuItem[] = [
   { label: "ランキング", href: "/ranking", icon: "trophy" },
+  { label: "順位表", href: "/standings", icon: "table" },
   { label: "試合結果", href: "/results", icon: "flag" },
   { label: "予想する", href: "/matches", icon: "pencil" },
   { label: "マイページ", href: "/me", icon: "user" },
@@ -90,6 +102,8 @@ function MenuIcon({ name }: { name: MenuItem["icon"] }) {
   switch (name) {
     case "trophy":
       return <IconTrophy />;
+    case "table":
+      return <IconTable />;
     case "flag":
       return <IconFlag />;
     case "pencil":
