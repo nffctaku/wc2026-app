@@ -89,13 +89,13 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { label: "ランキング", href: "/ranking", icon: "trophy" },
-  { label: "順位表", href: "/standings", icon: "table" },
-  { label: "試合結果", href: "/results", icon: "flag" },
   { label: "予想する", href: "/matches", icon: "pencil" },
+  { label: "ランキング", href: "/ranking", icon: "trophy" },
+  { label: "グループステージ", href: "/results", icon: "flag" },
+  { label: "決勝T", href: "/knockout", icon: "table" },
   { label: "マイページ", href: "/me", icon: "user" },
-  { label: "お問合せ", href: "/contact", icon: "mail" },
   { label: "SNS", href: "https://x.com/", icon: "x", external: true },
+  { label: "お問合せ", href: "/contact", icon: "mail" },
 ];
 
 function MenuIcon({ name }: { name: MenuItem["icon"] }) {

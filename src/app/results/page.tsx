@@ -275,7 +275,7 @@ export default function ResultsPage() {
       {error ? <pre style={{ color: "#b00020" }}>{error}</pre> : null}
 
       <section style={{ display: "grid", gap: 12 }}>
-        <h2 style={{ margin: 0 }}>順位表</h2>
+        <h2 style={{ margin: 0 }}>グループステージ</h2>
         <div
           style={{
             display: "grid",
@@ -487,6 +487,8 @@ export default function ResultsPage() {
                     {(groupMatches.get(g.groupNameJa) ?? []).map((m) => {
                       const home = teams.get(m.homeTeamId)?.nameJa ?? m.homeTeamId;
                       const away = teams.get(m.awayTeamId)?.nameJa ?? m.awayTeamId;
+                      const homeFlag = localFlagSrc(teams.get(m.homeTeamId));
+                      const awayFlag = localFlagSrc(teams.get(m.awayTeamId));
                       return (
                         <Link
                           key={m.id}
@@ -514,10 +516,34 @@ export default function ResultsPage() {
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 6,
                                 }}
                                 title={home}
                               >
-                                {home}
+                                {homeFlag ? (
+                                  <img
+                                    src={homeFlag}
+                                    alt=""
+                                    width={18}
+                                    height={12}
+                                    style={{
+                                      width: 18,
+                                      height: 12,
+                                      objectFit: "cover",
+                                      borderRadius: 2,
+                                      flex: "0 0 auto",
+                                    }}
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                                    }}
+                                  />
+                                ) : null}
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {home}
+                                </span>
                               </div>
                               <div
                                 style={{
@@ -526,10 +552,34 @@ export default function ResultsPage() {
                                   overflow: "hidden",
                                   textOverflow: "ellipsis",
                                   whiteSpace: "nowrap",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 6,
                                 }}
                                 title={away}
                               >
-                                {away}
+                                {awayFlag ? (
+                                  <img
+                                    src={awayFlag}
+                                    alt=""
+                                    width={18}
+                                    height={12}
+                                    style={{
+                                      width: 18,
+                                      height: 12,
+                                      objectFit: "cover",
+                                      borderRadius: 2,
+                                      flex: "0 0 auto",
+                                    }}
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                                    }}
+                                  />
+                                ) : null}
+                                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {away}
+                                </span>
                               </div>
                             </div>
                           </div>
