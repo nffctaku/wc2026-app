@@ -46,6 +46,12 @@ function toGroupLetter(groupNameJa: string): string {
   return m ? m[0] : groupNameJa;
 }
 
+function formatScore(m: MatchRow): string {
+  if (m.status !== "FINISHED") return "-";
+  if (typeof m.homeScore !== "number" || typeof m.awayScore !== "number") return "-";
+  return `${m.homeScore}-${m.awayScore}`;
+}
+
 function formatTs(ts: Timestamp): string {
   const d = ts.toDate();
   return d.toLocaleString("ja-JP", {
@@ -238,6 +244,20 @@ export default function ResultsPage() {
     return rows;
   }, [standingsGroups]);
 
+  const groupMatches = useMemo(() => {
+    const map = new Map<string, MatchRow[]>();
+    for (const m of matches) {
+      const group = m.groupNameJa && m.groupNameJa.trim() ? m.groupNameJa.trim() : "グループ未定";
+      if (!map.has(group)) map.set(group, []);
+      map.get(group)!.push(m);
+    }
+    for (const [k, list] of map.entries()) {
+      list.sort((a, b) => a.kickoffAt.toMillis() - b.kickoffAt.toMillis());
+      map.set(k, list);
+    }
+    return map;
+  }, [matches]);
+
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
@@ -428,6 +448,84 @@ export default function ResultsPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              <div style={{ borderTop: "1px solid #eee" }}>
+                <details style={{ padding: "10px 12px" }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 700 }}>
+                    対戦カード（タップで表示）
+                  </summary>
+                  <div style={{ height: 10 }} />
+                  <div style={{ display: "grid", gap: 10 }}>
+                    {(groupMatches.get(g.groupNameJa) ?? []).map((m) => {
+                      const home = teams.get(m.homeTeamId)?.nameJa ?? m.homeTeamId;
+                      const away = teams.get(m.awayTeamId)?.nameJa ?? m.awayTeamId;
+                      return (
+                        <Link
+                          key={m.id}
+                          href={`/matches/${m.id}`}
+                          style={{
+                            display: "grid",
+                            gridTemplateColumns: "88px 1fr 40px",
+                            gap: 10,
+                            alignItems: "center",
+                            padding: "10px 12px",
+                            borderRadius: 12,
+                            border: "1px solid rgba(0,0,0,0.10)",
+                            background: "rgba(0,0,0,0.02)",
+                          }}
+                        >
+                          <div style={{ fontSize: 12, color: "rgba(0,0,0,0.65)" }}>
+                            {formatTs(m.kickoffAt)}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                                title={home}
+                              >
+                                {home}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 14,
+                                  fontWeight: 700,
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
+                                title={away}
+                              >
+                                {away}
+                              </div>
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              textAlign: "right",
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
+                              <div style={{ fontSize: 14, fontWeight: 800 }}>
+                                {m.status === "FINISHED" && typeof m.homeScore === "number" ? m.homeScore : "-"}
+                              </div>
+                              <div style={{ fontSize: 14, fontWeight: 800 }}>
+                                {m.status === "FINISHED" && typeof m.awayScore === "number" ? m.awayScore : "-"}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </details>
               </div>
             </div>
           ))}
