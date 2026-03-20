@@ -41,8 +41,10 @@ type ThirdPlaceRow = {
   team: TeamStanding;
 };
 
-function proxiedFlagUrl(raw: string): string {
-  return `/api/flag?url=${encodeURIComponent(raw)}`;
+function localFlagSrc(team: TeamDoc | undefined): string | null {
+  const code = team?.code?.trim();
+  if (!code) return null;
+  return `/国旗/${code.toUpperCase()}.png`;
 }
 
 function toGroupLetter(groupNameJa: string): string {
@@ -375,9 +377,9 @@ export default function ResultsPage() {
                         </td>
                         <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                            {teams.get(t.teamId)?.flagUrl ? (
+                            {localFlagSrc(teams.get(t.teamId)) ? (
                               <img
-                                src={proxiedFlagUrl(teams.get(t.teamId)!.flagUrl!)}
+                                src={localFlagSrc(teams.get(t.teamId))!}
                                 alt=""
                                 width={18}
                                 height={12}
@@ -389,7 +391,9 @@ export default function ResultsPage() {
                                   flex: "0 0 auto",
                                 }}
                                 loading="lazy"
-                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
                               />
                             ) : null}
                             <div
@@ -665,9 +669,9 @@ export default function ResultsPage() {
                         <div
                           style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}
                         >
-                          {teams.get(r.team.teamId)?.flagUrl ? (
+                          {localFlagSrc(teams.get(r.team.teamId)) ? (
                             <img
-                              src={proxiedFlagUrl(teams.get(r.team.teamId)!.flagUrl!)}
+                              src={localFlagSrc(teams.get(r.team.teamId))!}
                               alt=""
                               width={18}
                               height={12}
@@ -679,7 +683,9 @@ export default function ResultsPage() {
                                 flex: "0 0 auto",
                               }}
                               loading="lazy"
-                              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLImageElement).style.display = "none";
+                              }}
                             />
                           ) : null}
                           <div
