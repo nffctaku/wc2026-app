@@ -41,6 +41,10 @@ type ThirdPlaceRow = {
   team: TeamStanding;
 };
 
+function proxiedFlagUrl(raw: string): string {
+  return `/api/flag?url=${encodeURIComponent(raw)}`;
+}
+
 function toGroupLetter(groupNameJa: string): string {
   const m = groupNameJa.match(/[A-Z]/);
   return m ? m[0] : groupNameJa;
@@ -370,17 +374,36 @@ export default function ResultsPage() {
                           {idx + 1}
                         </td>
                         <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
-                          <div
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                            title={t.teamLabel}
-                          >
-                            {t.teamLabel}
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
+                            {teams.get(t.teamId)?.flagUrl ? (
+                              <img
+                                src={proxiedFlagUrl(teams.get(t.teamId)!.flagUrl!)}
+                                alt=""
+                                width={18}
+                                height={12}
+                                style={{
+                                  width: 18,
+                                  height: 12,
+                                  objectFit: "cover",
+                                  borderRadius: 2,
+                                  flex: "0 0 auto",
+                                }}
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : null}
+                            <div
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 600,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                              title={t.teamLabel}
+                            >
+                              {t.teamLabel}
+                            </div>
                           </div>
                         </td>
                         <td
@@ -640,16 +663,37 @@ export default function ResultsPage() {
                       </td>
                       <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
                         <div
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 600,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                          title={r.team.teamLabel}
+                          style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}
                         >
-                          {r.team.teamLabel}
+                          {teams.get(r.team.teamId)?.flagUrl ? (
+                            <img
+                              src={proxiedFlagUrl(teams.get(r.team.teamId)!.flagUrl!)}
+                              alt=""
+                              width={18}
+                              height={12}
+                              style={{
+                                width: 18,
+                                height: 12,
+                                objectFit: "cover",
+                                borderRadius: 2,
+                                flex: "0 0 auto",
+                              }}
+                              loading="lazy"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : null}
+                          <div
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 600,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                            title={r.team.teamLabel}
+                          >
+                            {r.team.teamLabel}
+                          </div>
                         </div>
                       </td>
                       <td
