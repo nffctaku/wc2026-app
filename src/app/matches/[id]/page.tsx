@@ -33,6 +33,17 @@ type PredictionDoc = {
   updatedAt: Timestamp;
 };
 
+type RelatedMatchCard = {
+  id: string;
+  kickoffLabel: string;
+  homeName: string;
+  awayName: string;
+  homeFlag: string | null;
+  awayFlag: string | null;
+  status: "SCHEDULED" | "FINISHED";
+  scoreLabel?: string;
+};
+
 export default function MatchDetailPage() {
   const params = useParams<{ id: string | string[] }>();
   const routeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -48,6 +59,8 @@ export default function MatchDetailPage() {
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
+
+  const [relatedGroupMatches, setRelatedGroupMatches] = useState<RelatedMatchCard[]>([]);
 
   const [distribution, setDistribution] = useState<PredictionDistribution>({
     homeWinPct: 0,
@@ -126,6 +139,76 @@ export default function MatchDetailPage() {
 
     void run();
   }, [routeId]);
+
+  useEffect(() => {
+    async function run() {
+      if (!resolvedMatchId || !match) {
+        setRelatedGroupMatches([]);
+        return;
+      }
+      if (!match.groupNameJa) {
+        setRelatedGroupMatches([]);
+        return;
+      }
+
+      try {
+        const q = query(collection(db, "matches"), where("groupNameJa", "==", match.groupNameJa));
+        const snap = await getDocs(q);
+        const rows = snap.docs
+          .map((d) => ({ id: d.id, ...(d.data() as MatchDoc) }))
+          .filter((m) => m.id !== resolvedMatchId && m.stageNameJa === match.stageNameJa);
+
+        rows.sort((a, b) => a.kickoffAt.toMillis() - b.kickoffAt.toMillis());
+
+        const teamIds = new Set<string>();
+        for (const m of rows) {
+          teamIds.add(m.homeTeamId);
+          teamIds.add(m.awayTeamId);
+        }
+
+        const teamIdList = Array.from(teamIds);
+        const teamSnaps = await Promise.all(teamIdList.map((id) => getDoc(doc(db, "teams", id))));
+        const teamsById = new Map<string, TeamDoc>();
+        for (let i = 0; i < teamSnaps.length; i++) {
+          const teamId = teamIdList[i]!;
+          const s = teamSnaps[i]!;
+          if (s.exists()) teamsById.set(teamId, s.data() as TeamDoc);
+        }
+
+        const cards: RelatedMatchCard[] = rows.map((m) => {
+          const homeDoc = teamsById.get(m.homeTeamId) ?? null;
+          const awayDoc = teamsById.get(m.awayTeamId) ?? null;
+          const homeName = displayTeamName(homeDoc, m.homeTeamId);
+          const awayName = displayTeamName(awayDoc, m.awayTeamId);
+          const homeFlag = localFlagSrc(homeDoc);
+          const awayFlag = localFlagSrc(awayDoc);
+          const kickoffLabel = `${m.matchNumber} / ${formatTs(m.kickoffAt)}`;
+
+          const scoreLabel =
+            m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number"
+              ? `${m.homeScore}-${m.awayScore}`
+              : undefined;
+
+          return {
+            id: m.id,
+            kickoffLabel,
+            homeName,
+            awayName,
+            homeFlag,
+            awayFlag,
+            status: m.status,
+            scoreLabel,
+          };
+        });
+
+        setRelatedGroupMatches(cards);
+      } catch {
+        setRelatedGroupMatches([]);
+      }
+    }
+
+    void run();
+  }, [match, resolvedMatchId]);
 
   useEffect(() => {
     async function run() {
@@ -344,6 +427,8 @@ export default function MatchDetailPage() {
             awayScore={awayScore}
             onHomeScoreChange={setHomeScore}
             onAwayScoreChange={setAwayScore}
+
+            relatedGroupMatches={relatedGroupMatches}
           />
         </>
       ) : null}

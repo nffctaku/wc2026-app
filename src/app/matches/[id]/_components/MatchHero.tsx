@@ -8,6 +8,17 @@ import Countdown from "./Countdown";
 import PredictionDistributionBar, { type PredictionDistribution } from "./PredictionDistributionBar";
 import ScoreStepper from "./ScoreStepper";
 
+type RelatedMatchCard = {
+  id: string;
+  kickoffLabel: string;
+  homeName: string;
+  awayName: string;
+  homeFlag: string | null;
+  awayFlag: string | null;
+  status: "SCHEDULED" | "FINISHED";
+  scoreLabel?: string;
+};
+
 export default function MatchHero({
   match,
   home,
@@ -31,6 +42,8 @@ export default function MatchHero({
   awayScore,
   onHomeScoreChange,
   onAwayScoreChange,
+
+  relatedGroupMatches,
 }: {
   match: MatchDoc;
   home: TeamDoc | null;
@@ -54,6 +67,8 @@ export default function MatchHero({
   awayScore: number;
   onHomeScoreChange: (value: number) => void;
   onAwayScoreChange: (value: number) => void;
+
+  relatedGroupMatches?: RelatedMatchCard[];
 }) {
   return (
     <section
@@ -225,6 +240,62 @@ export default function MatchHero({
               awayPct={distribution.awayWinPct}
             />
           </div>
+
+          {relatedGroupMatches && relatedGroupMatches.length > 0 ? (
+            <div style={{ display: "grid", gap: 8, paddingTop: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>同じグループの他の試合</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                {relatedGroupMatches.map((m) => (
+                  <Link
+                    key={m.id}
+                    href={`/matches/${m.id}`}
+                    style={{
+                      textDecoration: "none",
+                      color: "inherit",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.14)",
+                      borderRadius: 12,
+                      padding: 10,
+                      display: "grid",
+                      gap: 6,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: 800 }}>
+                      <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.kickoffLabel}</div>
+                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{m.status === "FINISHED" ? "試合終了" : ""}</div>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                        {m.homeFlag ? (
+                          <img
+                            src={m.homeFlag}
+                            alt=""
+                            width={24}
+                            height={16}
+                            style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 4, flex: "0 0 auto" }}
+                          />
+                        ) : null}
+                        <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.homeName}</div>
+                      </div>
+                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{m.scoreLabel ?? "vs"}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", minWidth: 0 }}>
+                        <div style={{ fontWeight: 900, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.awayName}</div>
+                        {m.awayFlag ? (
+                          <img
+                            src={m.awayFlag}
+                            alt=""
+                            width={24}
+                            height={16}
+                            style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 4, flex: "0 0 auto" }}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
