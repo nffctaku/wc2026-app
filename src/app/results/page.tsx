@@ -17,7 +17,6 @@ import type { MatchRow, ThirdPlaceRow } from "./_lib/standings";
 import { computeStandings } from "./_lib/standings";
 import GroupStandings from "./_components/GroupStandings";
 import ThirdPlaceRanking from "./_components/ThirdPlaceRanking";
-import ResultsTable from "./_components/ResultsTable";
 
 export default function ResultsPage() {
   const [busy, setBusy] = useState(false);
@@ -166,10 +165,12 @@ export default function ResultsPage() {
         }}
       />
       <div style={{ position: "relative", zIndex: 1, display: "grid", gap: 12 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="resultsDesktopNav">
           <Link href="/">← Home</Link>
           <h1 style={{ margin: 0 }}>大会結果</h1>
         </div>
+
+        <div className="resultsMobileStageTag">グループステージ</div>
 
         {busy ? <p>読込中...</p> : null}
         {error ? <pre style={{ color: "#b00020" }}>{error}</pre> : null}
@@ -182,8 +183,6 @@ export default function ResultsPage() {
         />
 
         <ThirdPlaceRanking thirdPlaceRanking={thirdPlaceRanking} teams={teams} />
-
-        <ResultsTable rows={rows} pointsByMatchId={pointsByMatchId} />
       </div>
     </div>
   );

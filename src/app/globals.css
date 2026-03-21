@@ -4,8 +4,10 @@
 }
 
 .appHeader {
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   display: flex;
   justify-content: center;
@@ -119,6 +121,35 @@
   color: #ffffff;
 }
 
+.resultsDesktopNav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.resultsMobileStageTag {
+  display: none;
+  justify-content: center;
+  align-items: center;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #0b1f3a;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+@media (max-width: 767px) {
+  .resultsDesktopNav {
+    display: none;
+  }
+
+  .resultsMobileStageTag {
+    display: inline-flex;
+  }
+}
+
 .appHeaderLogoLink {
   display: inline-flex;
   align-items: center;
@@ -131,6 +162,14 @@
 
 .appMain {
   width: 100%;
+  padding-top: 84px;
+}
+
+.appFooter {
+  width: 100%;
+  height: 72px;
+  background: #0b1f3a;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
