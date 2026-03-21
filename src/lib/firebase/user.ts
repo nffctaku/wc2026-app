@@ -14,6 +14,9 @@ export type UserDoc = {
   idNo: number;
   nickname: string;
   photoURL: string | null;
+  xUrl: string | null;
+  instagramUrl: string | null;
+  championTeamId: string | null;
   role: UserRole;
   createdAt: unknown;
   updatedAt: unknown;
@@ -43,6 +46,9 @@ export async function ensureUserDoc(db: Firestore, user: User): Promise<void> {
       idNo: next,
       nickname,
       photoURL: user.photoURL ?? null,
+      xUrl: null,
+      instagramUrl: null,
+      championTeamId: null,
       role: "USER",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -62,6 +68,28 @@ export async function updateNickname(
     ref,
     {
       nickname,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
+
+export async function updateUserProfile(
+  db: Firestore,
+  uid: string,
+  input: {
+    nickname?: string;
+    photoURL?: string | null;
+    xUrl?: string | null;
+    instagramUrl?: string | null;
+    championTeamId?: string | null;
+  }
+): Promise<void> {
+  const ref = doc(db, "users", uid);
+  await setDoc(
+    ref,
+    {
+      ...input,
       updatedAt: serverTimestamp(),
     },
     { merge: true }

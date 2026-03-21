@@ -108,7 +108,11 @@ export default function RankingPage() {
               <tr key={r.uid}>
                 <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{r.rank}</td>
                 <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{r.idNo ?? "-"}</td>
-                <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{r.nickname}</td>
+                <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>
+                  <Link href={`/users/${r.uid}`} style={{ color: "inherit", textDecoration: "underline" }}>
+                    {r.nickname}
+                  </Link>
+                </td>
                 <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{r.totalPoints}</td>
                 <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{r.scoringVersion ?? "-"}</td>
               </tr>
