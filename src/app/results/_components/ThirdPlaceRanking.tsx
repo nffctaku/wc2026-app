@@ -58,51 +58,51 @@ export default function ThirdPlaceRanking({
                     textAlign: "left",
                     padding: "6px 6px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   チーム
                 </th>
                 <th
                   style={{
-                    width: 28,
+                    width: 24,
                     textAlign: "right",
-                    padding: "6px 4px",
+                    padding: "6px 2px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   P
                 </th>
                 <th
                   style={{
-                    width: 44,
+                    width: 36,
                     textAlign: "right",
-                    padding: "6px 4px",
+                    padding: "6px 2px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   GD
                 </th>
                 <th
                   style={{
-                    width: 52,
+                    width: 46,
                     textAlign: "right",
-                    padding: "6px 4px",
+                    padding: "6px 2px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   +/-
                 </th>
                 <th
                   style={{
-                    width: 44,
+                    width: 34,
                     textAlign: "right",
-                    padding: "6px 4px",
+                    padding: "6px 2px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   Pts
@@ -114,7 +114,7 @@ export default function ThirdPlaceRanking({
                     textAlign: "left",
                     padding: "6px 4px",
                     borderBottom: "1px solid #eee",
-                    fontSize: 12,
+                    fontSize: 11,
                   }}
                 >
                   form
@@ -176,7 +176,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontSize: 13,
@@ -186,7 +186,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontSize: 13,
@@ -196,7 +196,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontSize: 13,
@@ -206,7 +206,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontWeight: 700,

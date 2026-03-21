@@ -87,51 +87,51 @@ export default function GroupStandings({
                         textAlign: "left",
                         padding: "6px 6px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       チーム
                     </th>
                     <th
                       style={{
-                        width: 28,
+                        width: 24,
                         textAlign: "right",
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       P
                     </th>
                     <th
                       style={{
-                        width: 44,
+                        width: 36,
                         textAlign: "right",
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       GD
                     </th>
                     <th
                       style={{
-                        width: 52,
+                        width: 46,
                         textAlign: "right",
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       +/-
                     </th>
                     <th
                       style={{
-                        width: 44,
+                        width: 34,
                         textAlign: "right",
-                        padding: "6px 4px",
+                        padding: "6px 2px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       Pts
@@ -143,7 +143,7 @@ export default function GroupStandings({
                         textAlign: "left",
                         padding: "6px 4px",
                         borderBottom: "1px solid #eee",
-                        fontSize: 12,
+                        fontSize: 11,
                       }}
                     >
                       form
@@ -195,7 +195,7 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 4px",
+                          padding: "6px 2px",
                           borderBottom: rowBorder,
                           textAlign: "right",
                           fontSize: 13,
@@ -205,7 +205,7 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 4px",
+                          padding: "6px 2px",
                           borderBottom: rowBorder,
                           textAlign: "right",
                           fontSize: 13,
@@ -215,7 +215,7 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 4px",
+                          padding: "6px 2px",
                           borderBottom: rowBorder,
                           textAlign: "right",
                           fontSize: 13,
@@ -225,7 +225,7 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 4px",
+                          padding: "6px 2px",
                           borderBottom: rowBorder,
                           textAlign: "right",
                           fontWeight: 700,
@@ -292,8 +292,8 @@ export default function GroupStandings({
                         href={`/matches/${m.id}`}
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "88px 1fr 92px",
-                          gap: 10,
+                          gridTemplateColumns: "72px 1fr 84px",
+                          gap: 8,
                           alignItems: "center",
                           padding: "10px 12px",
                           borderRadius: 12,
