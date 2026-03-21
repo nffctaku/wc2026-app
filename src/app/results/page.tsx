@@ -35,21 +35,30 @@ export default function ResultsPage() {
       setBusy(true);
       setError(null);
       try {
-        const teamSnap = await getDocs(collection(db, "teams"));
+        const q = query(collection(db, "matches"), orderBy("kickoffAt", "desc"));
+        const [teamSnap, matchSnap] = await Promise.all([
+          getDocs(collection(db, "teams")),
+          getDocs(q),
+        ]);
+
         const teamMap = new Map<string, TeamDoc>();
         for (const docSnap of teamSnap.docs) {
           teamMap.set(docSnap.id, docSnap.data() as TeamDoc);
         }
-        setTeams(teamMap);
 
-        const q = query(collection(db, "matches"), orderBy("kickoffAt", "desc"));
-        const matchSnap = await getDocs(q);
-        const rows: MatchRow[] = matchSnap.docs
+        const matchRows: MatchRow[] = matchSnap.docs
           .map((d) => ({
             id: d.id,
             ...(d.data() as MatchDoc),
-          }));
-        setMatches(rows);
+          }))
+          .filter((m) => {
+            const stage = typeof m.stageNameJa === "string" ? m.stageNameJa : "";
+            const group = typeof m.groupNameJa === "string" ? m.groupNameJa : "";
+            return stage.includes("グループ") || group.includes("グループ");
+          });
+
+        setTeams(teamMap);
+        setMatches(matchRows);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -84,20 +93,6 @@ export default function ResultsPage() {
 
     void run();
   }, [uid]);
-
-  const rows = useMemo(() => {
-    return matches
-      .filter((m) => m.status === "FINISHED")
-      .map((m) => {
-        const home = teams.get(m.homeTeamId)?.nameJa ?? m.homeTeamId;
-        const away = teams.get(m.awayTeamId)?.nameJa ?? m.awayTeamId;
-        return {
-          ...m,
-          homeName: home,
-          awayName: away,
-        };
-      });
-  }, [matches, teams]);
 
   const standingsGroups = useMemo(() => {
     return computeStandings(matches, teams);

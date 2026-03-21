@@ -19,6 +19,8 @@ export default function ThirdPlaceRanking({
           style={{
             padding: "10px 12px",
             fontWeight: 800,
+            fontSize: 12,
+            whiteSpace: "nowrap",
             borderBottom: "1px solid #eee",
             background: "#fff",
           }}
