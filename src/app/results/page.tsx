@@ -7,9 +7,11 @@ import {
   getDocs,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/client";
+import { subscribeAuth } from "@/lib/firebase/auth";
 import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
 import type { MatchRow, ThirdPlaceRow } from "./_lib/standings";
 import { computeStandings } from "./_lib/standings";
@@ -22,6 +24,12 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
+  const [uid, setUid] = useState<string | null>(null);
+  const [pointsByMatchId, setPointsByMatchId] = useState<Map<string, number>>(new Map());
+
+  useEffect(() => {
+    return subscribeAuth((u) => setUid(u?.uid ?? null));
+  }, []);
 
   useEffect(() => {
     async function run() {
@@ -52,6 +60,31 @@ export default function ResultsPage() {
 
     void run();
   }, []);
+
+  useEffect(() => {
+    async function run() {
+      if (!uid) {
+        setPointsByMatchId(new Map());
+        return;
+      }
+      try {
+        const q = query(collection(db, "userMatchPoints"), where("uid", "==", uid));
+        const snap = await getDocs(q);
+        const m = new Map<string, number>();
+        for (const d of snap.docs) {
+          const data = d.data() as { matchId?: string; points?: number };
+          if (typeof data.matchId === "string" && typeof data.points === "number") {
+            m.set(data.matchId, data.points);
+          }
+        }
+        setPointsByMatchId(m);
+      } catch {
+        setPointsByMatchId(new Map());
+      }
+    }
+
+    void run();
+  }, [uid]);
 
   const rows = useMemo(() => {
     return matches
@@ -145,11 +178,12 @@ export default function ResultsPage() {
           displayStandingsGroups={displayStandingsGroups}
           teams={teams}
           groupMatches={groupMatches}
+          pointsByMatchId={pointsByMatchId}
         />
 
         <ThirdPlaceRanking thirdPlaceRanking={thirdPlaceRanking} teams={teams} />
 
-        <ResultsTable rows={rows} />
+        <ResultsTable rows={rows} pointsByMatchId={pointsByMatchId} />
       </div>
     </div>
   );
