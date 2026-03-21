@@ -10,6 +10,7 @@
 import {setGlobalOptions} from "firebase-functions";
 import * as logger from "firebase-functions/logger";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
+import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, Timestamp} from "firebase-admin/firestore";
 
@@ -42,6 +43,15 @@ type PredictionDoc = {
   awayScore: number;
 };
 
+type MatchPredictionStatsDoc = {
+  matchId: string;
+  homeWin: number;
+  draw: number;
+  awayWin: number;
+  total: number;
+  updatedAt: Timestamp;
+};
+
 type MatchDoc = {
   matchNumber?: number;
   status?: "SCHEDULED" | "FINISHED";
@@ -53,6 +63,71 @@ function outcome(home: number, away: number): "H" | "A" | "D" {
   if (home === away) return "D";
   return home > away ? "H" : "A";
 }
+
+function predOutcome(p?: Partial<PredictionDoc> | null): "H" | "A" | "D" | null {
+  const hs = typeof p?.homeScore === "number" ? p.homeScore : NaN;
+  const as = typeof p?.awayScore === "number" ? p.awayScore : NaN;
+  if (!Number.isFinite(hs) || !Number.isFinite(as)) return null;
+  return outcome(hs, as);
+}
+
+function deltaFor(out: "H" | "A" | "D" | null, sign: 1 | -1) {
+  return {
+    homeWin: out === "H" ? sign : 0,
+    draw: out === "D" ? sign : 0,
+    awayWin: out === "A" ? sign : 0,
+    total: out ? sign : 0,
+  };
+}
+
+export const onPredictionWritten = onDocumentWritten(
+  {
+    document: "predictions/{predId}",
+    region: "us-central1",
+  },
+  async (event) => {
+    const before = (event.data?.before?.exists ? (event.data.before.data() as PredictionDoc) : null) as
+      | PredictionDoc
+      | null;
+    const after = (event.data?.after?.exists ? (event.data.after.data() as PredictionDoc) : null) as
+      | PredictionDoc
+      | null;
+
+    const matchId = after?.matchId ?? before?.matchId;
+    if (!matchId) return;
+
+    const beforeOut = predOutcome(before);
+    const afterOut = predOutcome(after);
+
+    const db = getFirestore();
+    const ref = db.doc(`matchPredictionStats/${matchId}`);
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const cur = (snap.exists ? (snap.data() as Partial<MatchPredictionStatsDoc>) : {}) as Partial<MatchPredictionStatsDoc>;
+
+      const dec = deltaFor(beforeOut, -1);
+      const inc = deltaFor(afterOut, 1);
+
+      const next: MatchPredictionStatsDoc = {
+        matchId,
+        homeWin: Math.max(0, (cur.homeWin ?? 0) + dec.homeWin + inc.homeWin),
+        draw: Math.max(0, (cur.draw ?? 0) + dec.draw + inc.draw),
+        awayWin: Math.max(0, (cur.awayWin ?? 0) + dec.awayWin + inc.awayWin),
+        total: Math.max(0, (cur.total ?? 0) + dec.total + inc.total),
+        updatedAt: Timestamp.now(),
+      };
+
+      tx.set(ref, next, {merge: true});
+    });
+
+    logger.info("matchPredictionStats updated", {
+      matchId,
+      before: beforeOut,
+      after: afterOut,
+    });
+  }
+);
 
 function calcPoints(
   actualHome: number,

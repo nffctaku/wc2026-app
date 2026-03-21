@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
 
 import Countdown from "./Countdown";
+import PredictionDistributionBar, { type PredictionDistribution } from "./PredictionDistributionBar";
 
 export default function MatchHero({
   match,
@@ -18,6 +19,7 @@ export default function MatchHero({
   lockLabel,
   kickoffMs,
   nowMs,
+  distribution,
 }: {
   match: MatchDoc;
   home: TeamDoc | null;
@@ -30,6 +32,7 @@ export default function MatchHero({
   lockLabel: string;
   kickoffMs: number;
   nowMs?: number;
+  distribution?: PredictionDistribution | null;
 }) {
   return (
     <section
@@ -67,10 +70,6 @@ export default function MatchHero({
           >
             {homeName} vs {awayName}
           </div>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <Countdown targetMs={kickoffMs} nowMs={nowMs} />
         </div>
 
         <div style={{ textAlign: "center", display: "grid", gap: 4 }}>
@@ -144,6 +143,21 @@ export default function MatchHero({
             {match.stadiumNameJa}
             {match.cityNameJa ? `（${match.cityNameJa}）` : ""}
           </div>
+
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <Countdown targetMs={kickoffMs} />
+          </div>
+
+          {distribution ? (
+            <div style={{ paddingTop: 6 }}>
+              <PredictionDistributionBar
+                title="現在の勝敗予測"
+                homePct={distribution.homeWinPct}
+                drawPct={distribution.drawPct}
+                awayPct={distribution.awayWinPct}
+              />
+            </div>
+          ) : null}
         </div>
       </div>
     </section>

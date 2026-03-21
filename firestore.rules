@@ -53,6 +53,11 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
+    match /matchPredictionStats/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /userMatchPoints/{id} {
       allow read: if true;
       allow write: if false;

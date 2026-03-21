@@ -9,6 +9,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
   query,
   setDoc,
   Timestamp,
@@ -22,6 +23,7 @@ import { subscribeAuth } from "@/lib/firebase/auth";
 import MatchHero from "./_components/MatchHero";
 import PredictionCard from "./_components/PredictionCard";
 import { displayTeamName, formatKickoff, formatTs, localFlagSrc } from "./_lib/format";
+import type { PredictionDistribution } from "./_components/PredictionDistributionBar";
 
 type PredictionDoc = {
   uid: string;
@@ -47,6 +49,8 @@ export default function MatchDetailPage() {
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
+
+  const [distribution, setDistribution] = useState<PredictionDistribution | null>(null);
   const [homeScore, setHomeScore] = useState<string>("");
   const [awayScore, setAwayScore] = useState<string>("");
 
@@ -142,6 +146,43 @@ export default function MatchDetailPage() {
 
     void run();
   }, [uid, resolvedMatchId]);
+
+  useEffect(() => {
+    if (!resolvedMatchId) return;
+    const ref = doc(db, "matchPredictionStats", resolvedMatchId);
+
+    return onSnapshot(
+      ref,
+      (snap) => {
+        if (!snap.exists()) {
+          setDistribution(null);
+          return;
+        }
+        const d = snap.data() as Partial<{
+          homeWin: number;
+          draw: number;
+          awayWin: number;
+          total: number;
+        }>;
+
+        const total = typeof d.total === "number" ? d.total : 0;
+        const homeWin = typeof d.homeWin === "number" ? d.homeWin : 0;
+        const draw = typeof d.draw === "number" ? d.draw : 0;
+        const awayWin = typeof d.awayWin === "number" ? d.awayWin : 0;
+
+        const pct = (n: number) => (total === 0 ? 0 : Math.round((n / total) * 100));
+        setDistribution({
+          homeWinPct: pct(homeWin),
+          drawPct: pct(draw),
+          awayWinPct: pct(awayWin),
+          total,
+        });
+      },
+      () => {
+        setDistribution(null);
+      }
+    );
+  }, [resolvedMatchId]);
 
   const lockInfo = useMemo(() => {
     if (!match) return null;
@@ -244,6 +285,7 @@ export default function MatchDetailPage() {
             lockLabel={formatTs(match.kickoffAt)}
             kickoffMs={match.kickoffAt.toDate().getTime()}
             nowMs={lockInfo?.now.getTime()}
+            distribution={distribution && distribution.total > 0 ? distribution : null}
           />
 
           <div style={{ padding: 18 }}>

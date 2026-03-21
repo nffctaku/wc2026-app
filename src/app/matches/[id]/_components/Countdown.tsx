@@ -19,10 +19,8 @@ function formatRemaining(ms: number): string {
 
 export default function Countdown({
   targetMs,
-  nowMs,
 }: {
   targetMs: number;
-  nowMs?: number;
 }) {
   const [tick, setTick] = useState(0);
 
@@ -32,9 +30,9 @@ export default function Countdown({
   }, []);
 
   const remainingMs = useMemo(() => {
-    const now = typeof nowMs === "number" ? nowMs : Date.now();
+    const now = Date.now();
     return Math.max(0, targetMs - now);
-  }, [targetMs, nowMs, tick]);
+  }, [targetMs, tick]);
 
   const closed = remainingMs <= 0;
 
