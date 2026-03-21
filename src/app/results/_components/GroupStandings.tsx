@@ -229,13 +229,16 @@ export default function GroupStandings({
                     const away = teams.get(m.awayTeamId)?.nameJa ?? m.awayTeamId;
                     const homeFlag = localFlagSrc(teams.get(m.homeTeamId));
                     const awayFlag = localFlagSrc(teams.get(m.awayTeamId));
+                    const hasScore =
+                      m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number";
+                    const scoreText = hasScore ? `${m.homeScore}-${m.awayScore}` : "-";
                     return (
                       <Link
                         key={m.id}
                         href={`/matches/${m.id}`}
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "88px 1fr 40px",
+                          gridTemplateColumns: "88px 1fr 92px",
                           gap: 10,
                           alignItems: "center",
                           padding: "10px 12px",
@@ -318,14 +321,27 @@ export default function GroupStandings({
                           </div>
                         </div>
                         <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
-                          <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
-                            <div style={{ fontSize: 14, fontWeight: 800 }}>
-                              {m.status === "FINISHED" && typeof m.homeScore === "number" ? m.homeScore : "-"}
-                            </div>
-                            <div style={{ fontSize: 14, fontWeight: 800 }}>
-                              {m.status === "FINISHED" && typeof m.awayScore === "number" ? m.awayScore : "-"}
-                            </div>
-                          </div>
+                          {hasScore ? (
+                            <div style={{ fontSize: 14, fontWeight: 900 }}>{scoreText}</div>
+                          ) : (
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "6px 10px",
+                                borderRadius: 999,
+                                border: "1px solid rgba(0,0,0,0.10)",
+                                background: "#ff9f1c",
+                                fontSize: 12,
+                                fontWeight: 800,
+                                color: "#fff",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              予想する
+                            </span>
+                          )}
                         </div>
                       </Link>
                     );

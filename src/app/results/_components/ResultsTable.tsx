@@ -59,10 +59,8 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
 
                   <div style={{ display: "grid", gap: 10 }}>
                     {g.matches.map((m) => {
-                      const score =
-                        typeof m.homeScore === "number" && typeof m.awayScore === "number"
-                          ? `${m.homeScore}-${m.awayScore}`
-                          : "-";
+                      const hasScore = typeof m.homeScore === "number" && typeof m.awayScore === "number";
+                      const score = hasScore ? `${m.homeScore}-${m.awayScore}` : "-";
 
                       return (
                         <Link
@@ -98,7 +96,27 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
                             </div>
                           </div>
                           <div style={{ textAlign: "right", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
-                            {score}
+                            {hasScore ? (
+                              score
+                            ) : (
+                              <span
+                                style={{
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  padding: "6px 10px",
+                                  borderRadius: 999,
+                                  border: "1px solid rgba(0,0,0,0.10)",
+                                  background: "#ff9f1c",
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: "#fff",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                予想する
+                              </span>
+                            )}
                           </div>
                         </Link>
                       );
