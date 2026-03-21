@@ -45,7 +45,6 @@ export default function GroupStandings({
 
   return (
     <section style={{ display: "grid", gap: 12 }}>
-      <h2 style={{ margin: 0 }}>グループステージ</h2>
       <div
         style={{
           display: "grid",
