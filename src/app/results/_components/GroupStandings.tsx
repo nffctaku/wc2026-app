@@ -10,11 +10,39 @@ export default function GroupStandings({
   displayStandingsGroups,
   teams,
   groupMatches,
+  pointsByMatchId,
 }: {
   displayStandingsGroups: GroupStanding[];
   teams: Map<string, TeamDoc>;
   groupMatches: Map<string, MatchRow[]>;
+  pointsByMatchId?: Map<string, number>;
 }) {
+  function pointsBadge(points: number) {
+    const value = points >= 50 ? 50 : points >= 20 ? 20 : 0;
+    const bg = value >= 50 ? "#f4c542" : value >= 20 ? "#49e21c" : "#9aa0a6";
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 34,
+          height: 34,
+          borderRadius: 999,
+          background: bg,
+          color: "#fff",
+          fontWeight: 900,
+          fontSize: 14,
+          lineHeight: 1,
+          textShadow: "0 1px 1px rgba(0,0,0,0.30)",
+          flex: "0 0 auto",
+        }}
+      >
+        {value}
+      </span>
+    );
+  }
+
   return (
     <section style={{ display: "grid", gap: 12 }}>
       <h2 style={{ margin: 0 }}>グループステージ</h2>
@@ -232,6 +260,8 @@ export default function GroupStandings({
                     const hasScore =
                       m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number";
                     const scoreText = hasScore ? `${m.homeScore}-${m.awayScore}` : "-";
+                    const points = pointsByMatchId?.get(m.id);
+                    const showPoints = hasScore && typeof points === "number";
                     return (
                       <Link
                         key={m.id}
@@ -322,7 +352,10 @@ export default function GroupStandings({
                         </div>
                         <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                           {hasScore ? (
-                            <div style={{ fontSize: 14, fontWeight: 900 }}>{scoreText}</div>
+                            <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+                              <span style={{ fontSize: 16, fontWeight: 900 }}>{scoreText}</span>
+                              {showPoints ? pointsBadge(points!) : null}
+                            </div>
                           ) : (
                             <span
                               style={{

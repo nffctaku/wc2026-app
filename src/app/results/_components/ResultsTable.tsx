@@ -7,7 +7,39 @@ import { formatTs } from "../_lib/format";
 
 export type ResultsRow = MatchRow & { homeName: string; awayName: string };
 
-export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
+function pointsBadge(points: number) {
+  const value = points >= 50 ? 50 : points >= 20 ? 20 : 0;
+  const bg = value >= 50 ? "#f4c542" : value >= 20 ? "#49e21c" : "#9aa0a6";
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 34,
+        height: 34,
+        borderRadius: 999,
+        background: bg,
+        color: "#fff",
+        fontWeight: 900,
+        fontSize: 14,
+        lineHeight: 1,
+        textShadow: "0 1px 1px rgba(0,0,0,0.30)",
+        flex: "0 0 auto",
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
+export default function ResultsTable({
+  rows,
+  pointsByMatchId,
+}: {
+  rows: ResultsRow[];
+  pointsByMatchId?: Map<string, number>;
+}) {
   const stageGroups = (() => {
     const map = new Map<string, Map<string, ResultsRow[]>>();
 
@@ -61,6 +93,8 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
                     {g.matches.map((m) => {
                       const hasScore = typeof m.homeScore === "number" && typeof m.awayScore === "number";
                       const score = hasScore ? `${m.homeScore}-${m.awayScore}` : "-";
+                      const points = pointsByMatchId?.get(m.id);
+                      const showPoints = hasScore && typeof points === "number";
 
                       return (
                         <Link
@@ -97,7 +131,10 @@ export default function ResultsTable({ rows }: { rows: ResultsRow[] }) {
                           </div>
                           <div style={{ textAlign: "right", fontWeight: 900, fontVariantNumeric: "tabular-nums" }}>
                             {hasScore ? (
-                              score
+                              <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ fontSize: 16, fontWeight: 900 }}>{score}</span>
+                                {showPoints ? pointsBadge(points!) : null}
+                              </div>
                             ) : (
                               <span
                                 style={{

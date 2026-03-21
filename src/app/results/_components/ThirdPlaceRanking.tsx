@@ -15,7 +15,7 @@ export default function ThirdPlaceRanking({
   return (
     <section style={{ display: "grid", gap: 10 }}>
       <h2 style={{ margin: 0 }}>3位チーム順位（上位8が決勝ラウンド進出）</h2>
-      <div style={{ border: "1px solid #ddd", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ border: "1px solid #ddd", borderRadius: 12, overflow: "hidden", background: "#fff" }}>
         <div>
           <table style={{ borderCollapse: "collapse", width: "100%", tableLayout: "fixed" }}>
             <thead>

@@ -8,10 +8,12 @@ import {
   orderBy,
   query,
   Timestamp,
+  where,
 } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/client";
 import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
+import { subscribeAuth } from "@/lib/firebase/auth";
 
 type MatchRow = MatchDoc & { id: string };
 
@@ -71,6 +73,38 @@ export default function KnockoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchRow[]>([]);
   const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
+  const [uid, setUid] = useState<string | null>(null);
+  const [pointsByMatchId, setPointsByMatchId] = useState<Map<string, number>>(new Map());
+
+  function pointsBadge(points: number) {
+    const value = points >= 50 ? 50 : points >= 20 ? 20 : 0;
+    const bg = value >= 50 ? "#f4c542" : value >= 20 ? "#49e21c" : "#9aa0a6";
+    return (
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 34,
+          height: 34,
+          borderRadius: 999,
+          background: bg,
+          color: "#fff",
+          fontWeight: 900,
+          fontSize: 14,
+          lineHeight: 1,
+          textShadow: "0 1px 1px rgba(0,0,0,0.30)",
+          flex: "0 0 auto",
+        }}
+      >
+        {value}
+      </span>
+    );
+  }
+
+  useEffect(() => {
+    return subscribeAuth((u) => setUid(u?.uid ?? null));
+  }, []);
 
   useEffect(() => {
     async function run() {
@@ -100,6 +134,31 @@ export default function KnockoutPage() {
 
     void run();
   }, []);
+
+  useEffect(() => {
+    async function run() {
+      if (!uid) {
+        setPointsByMatchId(new Map());
+        return;
+      }
+      try {
+        const q = query(collection(db, "userMatchPoints"), where("uid", "==", uid));
+        const snap = await getDocs(q);
+        const m = new Map<string, number>();
+        for (const d of snap.docs) {
+          const data = d.data() as { matchId?: string; points?: number };
+          if (typeof data.matchId === "string" && typeof data.points === "number") {
+            m.set(data.matchId, data.points);
+          }
+        }
+        setPointsByMatchId(m);
+      } catch {
+        setPointsByMatchId(new Map());
+      }
+    }
+
+    void run();
+  }, [uid]);
 
   const stageGroups = useMemo((): StageGroup[] => {
     const knockout = matches.filter((m) => !isGroupStage(m));
@@ -158,6 +217,8 @@ export default function KnockoutPage() {
                   const homeScore = hasScore ? String(m.homeScore) : "-";
                   const awayScore = hasScore ? String(m.awayScore) : "-";
                   const scoreText = hasScore ? `${homeScore}-${awayScore}` : "-";
+                  const points = pointsByMatchId.get(m.id);
+                  const showPoints = hasScore && typeof points === "number";
 
                   return (
                     <Link
@@ -256,7 +317,10 @@ export default function KnockoutPage() {
                       </div>
                       <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                         {hasScore ? (
-                          <div style={{ fontSize: 14, fontWeight: 900 }}>{scoreText}</div>
+                          <div style={{ display: "inline-flex", gap: 8, alignItems: "center" }}>
+                            <span style={{ fontSize: 16, fontWeight: 900 }}>{scoreText}</span>
+                            {showPoints ? pointsBadge(points) : null}
+                          </div>
                         ) : (
                           <span
                             style={{
