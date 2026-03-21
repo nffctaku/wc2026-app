@@ -43,6 +43,13 @@ function stageOrder(stageNameJa: string): number {
   return 999;
 }
 
+function displayStageLabel(stageNameJa: string): string {
+  const s = normalizeStageNameJa(stageNameJa);
+  if (s.includes("32")) return "R32";
+  if (s.includes("16")) return "R16";
+  return stageNameJa;
+}
+
 function formatTs(ts: Timestamp): string {
   const d = ts.toDate();
   return d.toLocaleString("ja-JP", {
@@ -75,6 +82,7 @@ export default function KnockoutPage() {
   const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
   const [uid, setUid] = useState<string | null>(null);
   const [pointsByMatchId, setPointsByMatchId] = useState<Map<string, number>>(new Map());
+  const [selectedStage, setSelectedStage] = useState<string>("");
 
   function pointsBadge(points: number) {
     const value = points >= 50 ? 50 : points >= 20 ? 20 : 0;
@@ -185,24 +193,98 @@ export default function KnockoutPage() {
     return list;
   }, [matches]);
 
-  return (
-    <div style={{ padding: 24, display: "grid", gap: 12 }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <Link href="/">← Home</Link>
-        <h1 style={{ margin: 0 }}>決勝トーナメント</h1>
-      </div>
+  useEffect(() => {
+    if (stageGroups.length === 0) {
+      setSelectedStage("");
+      return;
+    }
+    const exists = stageGroups.some((g) => g.stageNameJa === selectedStage);
+    if (!exists) setSelectedStage(stageGroups[0]!.stageNameJa);
+  }, [selectedStage, stageGroups]);
 
+  const selectedGroup = useMemo(() => {
+    if (!selectedStage) return null;
+    return stageGroups.find((g) => g.stageNameJa === selectedStage) ?? null;
+  }, [selectedStage, stageGroups]);
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
+        color: "#fff",
+        position: "relative",
+        padding: 24,
+        display: "grid",
+        alignContent: "start",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
+          pointerEvents: "none",
+        }}
+      />
+      <div style={{ position: "relative", display: "grid", alignContent: "start", gap: 12 }}>
       {busy ? <p>読込中...</p> : null}
-      {error ? <pre style={{ color: "#b00020" }}>{error}</pre> : null}
+      {error ? <pre style={{ color: "#ffb4ab" }}>{error}</pre> : null}
 
       {!busy && !error ? (
-        <div style={{ display: "grid", gap: 16 }}>
+        <div style={{ display: "grid", alignContent: "start", gap: 10 }}>
           {stageGroups.length === 0 ? <p>データがありません</p> : null}
-          {stageGroups.map((g) => (
-            <section key={g.stageNameJa} style={{ display: "grid", gap: 10 }}>
-              <h2 style={{ margin: 0 }}>{g.stageNameJa}</h2>
+
+          {stageGroups.length > 0 ? (
+            <div
+              style={{
+                display: "flex",
+                gap: 8,
+                overflowX: "auto",
+                paddingBottom: 2,
+                alignItems: "center",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
+              {stageGroups.map((g) => {
+                const active = g.stageNameJa === selectedStage;
+                return (
+                  <button
+                    key={g.stageNameJa}
+                    onClick={() => setSelectedStage(g.stageNameJa)}
+                    style={{
+                      appearance: "none",
+                      WebkitAppearance: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: 34,
+                      lineHeight: "34px",
+                      width: "auto",
+                      border: active ? "1px solid rgba(255,255,255,0.26)" : "1px solid rgba(255,255,255,0.14)",
+                      background: active ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)",
+                      color: active ? "rgba(255,255,255,0.96)" : "rgba(255,255,255,0.82)",
+                      borderRadius: 999,
+                      padding: "8px 12px",
+                      fontWeight: 900,
+                      fontSize: 12,
+                      whiteSpace: "nowrap",
+                      cursor: "pointer",
+                      flex: "0 0 auto",
+                    }}
+                  >
+                    {displayStageLabel(g.stageNameJa)}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {selectedGroup ? (
+            <section style={{ display: "grid", gap: 10, paddingTop: 2 }}>
               <div style={{ display: "grid", gap: 10 }}>
-                {g.matches.map((m) => {
+                {selectedGroup.matches.map((m) => {
                   const homeTeam = teams.get(m.homeTeamId);
                   const awayTeam = teams.get(m.awayTeamId);
 
@@ -231,11 +313,13 @@ export default function KnockoutPage() {
                         alignItems: "center",
                         padding: "10px 12px",
                         borderRadius: 12,
-                        border: "1px solid rgba(0,0,0,0.10)",
-                        background: "rgba(0,0,0,0.02)",
+                        border: "1px solid rgba(255,255,255,0.14)",
+                        background: "rgba(255,255,255,0.06)",
+                        color: "inherit",
+                        textDecoration: "none",
                       }}
                     >
-                      <div style={{ fontSize: 12, color: "rgba(0,0,0,0.65)" }}>{formatTs(m.kickoffAt)}</div>
+                      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)" }}>{formatTs(m.kickoffAt)}</div>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
                           <div
@@ -311,7 +395,17 @@ export default function KnockoutPage() {
                             </span>
                           </div>
                         </div>
-                        <div style={{ fontSize: 11, color: "rgba(0,0,0,0.55)", marginTop: 4 }}>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "rgba(255,255,255,0.62)",
+                            marginTop: 4,
+                            overflow: "hidden",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                          }}
+                        >
                           {m.cityNameJa} / {m.stadiumNameJa}
                         </div>
                       </div>
@@ -329,8 +423,8 @@ export default function KnockoutPage() {
                               justifyContent: "center",
                               padding: "6px 10px",
                               borderRadius: 999,
-                              border: "1px solid rgba(0,0,0,0.10)",
-                              background: "#ff9f1c",
+                              border: "1px solid rgba(255,255,255,0.14)",
+                              background: "rgba(255,159,28,0.95)",
                               fontSize: 12,
                               fontWeight: 800,
                               color: "#fff",
@@ -346,9 +440,10 @@ export default function KnockoutPage() {
                 })}
               </div>
             </section>
-          ))}
+          ) : null}
         </div>
       ) : null}
+      </div>
     </div>
   );
 }
