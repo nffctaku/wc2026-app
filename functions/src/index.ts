@@ -7,10 +7,9 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-import {setGlobalOptions} from "firebase-functions";
+import * as functionsV1 from "firebase-functions/v1";
 import * as logger from "firebase-functions/logger";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
-import {onDocumentWritten} from "firebase-functions/v2/firestore";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, Timestamp} from "firebase-admin/firestore";
 
@@ -27,7 +26,6 @@ import {getFirestore, Timestamp} from "firebase-admin/firestore";
 // functions should each use functions.runWith({ maxInstances: 10 }) instead.
 // In the v1 API, each function can only serve one request per container, so
 // this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
 
 // export const helloWorld = onRequest((request, response) => {
 //   logger.info("Hello logs!", {structuredData: true});
@@ -80,18 +78,12 @@ function deltaFor(out: "H" | "A" | "D" | null, sign: 1 | -1) {
   };
 }
 
-export const onPredictionWritten = onDocumentWritten(
-  {
-    document: "predictions/{predId}",
-    region: "us-central1",
-  },
-  async (event) => {
-    const before = (event.data?.before?.exists ? (event.data.before.data() as PredictionDoc) : null) as
-      | PredictionDoc
-      | null;
-    const after = (event.data?.after?.exists ? (event.data.after.data() as PredictionDoc) : null) as
-      | PredictionDoc
-      | null;
+export const onPredictionWritten = functionsV1
+  .region("us-central1")
+  .firestore.document("predictions/{predId}")
+  .onWrite(async (change: functionsV1.Change<functionsV1.firestore.DocumentSnapshot>) => {
+    const before = (change.before.exists ? (change.before.data() as PredictionDoc) : null) as PredictionDoc | null;
+    const after = (change.after.exists ? (change.after.data() as PredictionDoc) : null) as PredictionDoc | null;
 
     const matchId = after?.matchId ?? before?.matchId;
     if (!matchId) return;
@@ -126,8 +118,7 @@ export const onPredictionWritten = onDocumentWritten(
       before: beforeOut,
       after: afterOut,
     });
-  }
-);
+  });
 
 function calcPoints(
   actualHome: number,
