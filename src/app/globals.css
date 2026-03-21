@@ -150,6 +150,12 @@
   }
 }
 
+@media (max-width: 380px) {
+  .resultsStandingsFormCol {
+    display: none;
+  }
+}
+
 .appHeaderLogoLink {
   display: inline-flex;
   align-items: center;

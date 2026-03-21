@@ -108,6 +108,7 @@ export default function ThirdPlaceRanking({
                   Pts
                 </th>
                 <th
+                  className="resultsStandingsFormCol"
                   style={{
                     width: 84,
                     textAlign: "left",
@@ -214,7 +215,10 @@ export default function ThirdPlaceRanking({
                     >
                       {r.team.pts}
                     </td>
-                    <td style={{ padding: "6px 4px", borderBottom: "1px solid #f2f2f2" }}>
+                    <td
+                      className="resultsStandingsFormCol"
+                      style={{ padding: "6px 4px", borderBottom: "1px solid #f2f2f2" }}
+                    >
                       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                         {r.team.form.length ? (
                           r.team.form.map((m, i) => {

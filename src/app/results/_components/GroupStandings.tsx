@@ -137,6 +137,7 @@ export default function GroupStandings({
                       Pts
                     </th>
                     <th
+                      className="resultsStandingsFormCol"
                       style={{
                         width: 84,
                         textAlign: "left",
@@ -233,7 +234,7 @@ export default function GroupStandings({
                       >
                         {t.pts}
                       </td>
-                      <td style={{ padding: "6px 4px", borderBottom: rowBorder }}>
+                      <td className="resultsStandingsFormCol" style={{ padding: "6px 4px", borderBottom: rowBorder }}>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                           {t.form.length ? (
                             t.form.map((m, i) => {
