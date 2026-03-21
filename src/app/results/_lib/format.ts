@@ -2,6 +2,15 @@ import type { Timestamp } from "firebase/firestore";
 
 import type { TeamDoc } from "@/lib/fifa/normalize";
 
+export function displayTeamName(team: TeamDoc | undefined, fallback: string): string {
+  const code = team?.code?.trim()?.toUpperCase();
+  const raw = team?.nameJa?.trim();
+
+  if (code === "NZL" || raw === "New Zealand") return "ニュージーランド";
+
+  return raw || fallback;
+}
+
 export function localFlagSrc(team: TeamDoc | undefined): string | null {
   const code = team?.code?.trim();
   if (!code) return null;

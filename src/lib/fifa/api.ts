@@ -45,5 +45,9 @@ export async function fetchFifaMatches(): Promise<FifaMatch[]> {
 
 export function pickJa(items?: Localized[]): string {
   if (!items || items.length === 0) return "";
-  return items.find((x) => x.Locale === "ja-JP")?.Description ?? items[0]!.Description;
+  return (
+    items.find((x) => x.Locale === "ja-JP")?.Description ??
+    items.find((x) => x.Locale.toLowerCase().startsWith("ja"))?.Description ??
+    items[0]!.Description
+  );
 }

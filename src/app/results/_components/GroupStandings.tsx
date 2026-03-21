@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import type { GroupStanding, MatchRow } from "../_lib/standings";
 import type { TeamDoc } from "@/lib/fifa/normalize";
-import { formatTs, localFlagSrc } from "../_lib/format";
+import { displayTeamName, formatTs, localFlagSrc } from "../_lib/format";
 
 export default function GroupStandings({
   displayStandingsGroups,
@@ -277,8 +277,8 @@ export default function GroupStandings({
                 <div style={{ height: 10 }} />
                 <div style={{ display: "grid", gap: 10 }}>
                   {(groupMatches.get(g.groupNameJa) ?? []).map((m) => {
-                    const home = teams.get(m.homeTeamId)?.nameJa ?? m.homeTeamId;
-                    const away = teams.get(m.awayTeamId)?.nameJa ?? m.awayTeamId;
+                    const home = displayTeamName(teams.get(m.homeTeamId), m.homeTeamId);
+                    const away = displayTeamName(teams.get(m.awayTeamId), m.awayTeamId);
                     const homeFlag = localFlagSrc(teams.get(m.homeTeamId));
                     const awayFlag = localFlagSrc(teams.get(m.awayTeamId));
                     const hasScore =

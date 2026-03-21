@@ -136,6 +136,8 @@ export default function ResultsPage() {
     return map;
   }, [matches]);
 
+  const ready = teams.size > 0 && matches.length > 0;
+
   return (
     <div
       style={{
@@ -167,17 +169,37 @@ export default function ResultsPage() {
 
         <div className="resultsMobileStageTag">グループステージ</div>
 
-        {busy ? <p>読込中...</p> : null}
         {error ? <pre style={{ color: "#b00020" }}>{error}</pre> : null}
 
-        <GroupStandings
-          displayStandingsGroups={displayStandingsGroups}
-          teams={teams}
-          groupMatches={groupMatches}
-          pointsByMatchId={pointsByMatchId}
-        />
+        {!ready && !error ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 260,
+              borderRadius: 12,
+              border: "1px solid rgba(0,0,0,0.10)",
+              background: "rgba(255,255,255,0.92)",
+              fontWeight: 800,
+            }}
+          >
+            読込中...
+          </div>
+        ) : null}
 
-        <ThirdPlaceRanking thirdPlaceRanking={thirdPlaceRanking} teams={teams} />
+        {ready ? (
+          <>
+            <GroupStandings
+              displayStandingsGroups={displayStandingsGroups}
+              teams={teams}
+              groupMatches={groupMatches}
+              pointsByMatchId={pointsByMatchId}
+            />
+
+            <ThirdPlaceRanking thirdPlaceRanking={thirdPlaceRanking} teams={teams} />
+          </>
+        ) : null}
       </div>
     </div>
   );
