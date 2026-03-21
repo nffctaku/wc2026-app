@@ -50,7 +50,12 @@ export default function MatchDetailPage() {
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
 
-  const [distribution, setDistribution] = useState<PredictionDistribution | null>(null);
+  const [distribution, setDistribution] = useState<PredictionDistribution>({
+    homeWinPct: 0,
+    drawPct: 0,
+    awayWinPct: 0,
+    total: 0,
+  });
   const [homeScore, setHomeScore] = useState<string>("");
   const [awayScore, setAwayScore] = useState<string>("");
 
@@ -155,7 +160,7 @@ export default function MatchDetailPage() {
       ref,
       (snap) => {
         if (!snap.exists()) {
-          setDistribution(null);
+          setDistribution({ homeWinPct: 0, drawPct: 0, awayWinPct: 0, total: 0 });
           return;
         }
         const d = snap.data() as Partial<{
@@ -179,7 +184,7 @@ export default function MatchDetailPage() {
         });
       },
       () => {
-        setDistribution(null);
+        setDistribution({ homeWinPct: 0, drawPct: 0, awayWinPct: 0, total: 0 });
       }
     );
   }, [resolvedMatchId]);
@@ -285,7 +290,7 @@ export default function MatchDetailPage() {
             lockLabel={formatTs(match.kickoffAt)}
             kickoffMs={match.kickoffAt.toDate().getTime()}
             nowMs={lockInfo?.now.getTime()}
-            distribution={distribution && distribution.total > 0 ? distribution : null}
+            distribution={distribution}
           />
 
           <div style={{ padding: 18 }}>

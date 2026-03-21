@@ -31,6 +31,7 @@ export default function PredictionDistributionBar({
   const normH = sum === 0 ? 0 : (h / sum) * 100;
   const normD = sum === 0 ? 0 : (d / sum) * 100;
   const normA = sum === 0 ? 0 : (a / sum) * 100;
+  const empty = sum === 0;
 
   return (
     <div style={{ display: "grid", gap: 6, width: "100%" }}>
@@ -48,12 +49,12 @@ export default function PredictionDistributionBar({
           border: "1px solid rgba(255,255,255,0.22)",
           background: "rgba(0,0,0,0.18)",
           display: "grid",
-          gridTemplateColumns: `${normH}% ${normD}% ${normA}%`,
+          gridTemplateColumns: empty ? "1fr 1fr 1fr" : `${normH}% ${normD}% ${normA}%`,
         }}
       >
-        <div style={{ background: "#f4c542" }} />
-        <div style={{ background: "#9aa0a6" }} />
-        <div style={{ background: "#d93025" }} />
+        <div style={{ background: "#f4c542", opacity: empty ? 0.25 : 1 }} />
+        <div style={{ background: "#9aa0a6", opacity: empty ? 0.25 : 1 }} />
+        <div style={{ background: "#d93025", opacity: empty ? 0.25 : 1 }} />
       </div>
 
       <div style={{ textAlign: "center", fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>

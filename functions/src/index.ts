@@ -140,6 +140,109 @@ async function assertAdmin(uid: string): Promise<void> {
   }
 }
 
+export const backfillMatchPredictionStats = onCall(async (request) => {
+  try {
+    logger.info("backfillMatchPredictionStats called", {
+      hasAuth: Boolean(request.auth),
+      uid: request.auth?.uid ?? null,
+    });
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "ログインが必要です");
+    }
+    await assertAdmin(uid);
+
+    const matchId =
+      typeof (request.data as any)?.matchId === "string"
+        ? String((request.data as any).matchId)
+        : null;
+
+    const db = getFirestore();
+    let q = db.collection("predictions").orderBy("matchId");
+    if (matchId) {
+      q = q.where("matchId", "==", matchId);
+    }
+
+    const counts = new Map<
+      string,
+      {
+        homeWin: number;
+        draw: number;
+        awayWin: number;
+        total: number;
+      }
+    >();
+
+    let last: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+    let predictionsProcessed = 0;
+
+    while (true) {
+      let page = q.limit(1000);
+      if (last) page = page.startAfter(last);
+      const snap = await page.get();
+      if (snap.empty) break;
+
+      for (const docSnap of snap.docs) {
+        const p = docSnap.data() as Partial<PredictionDoc>;
+        const mid = typeof p.matchId === "string" ? p.matchId : null;
+        if (!mid) continue;
+        const out = predOutcome(p);
+        if (!out) continue;
+
+        predictionsProcessed += 1;
+        const cur = counts.get(mid) ?? {homeWin: 0, draw: 0, awayWin: 0, total: 0};
+        if (out === "H") cur.homeWin += 1;
+        else if (out === "D") cur.draw += 1;
+        else cur.awayWin += 1;
+        cur.total += 1;
+        counts.set(mid, cur);
+      }
+
+      last = snap.docs[snap.docs.length - 1] ?? null;
+      if (snap.size < 1000) break;
+    }
+
+    const writer = db.bulkWriter();
+    let docsWritten = 0;
+    for (const [mid, c] of counts) {
+      writer.set(
+        db.doc(`matchPredictionStats/${mid}`),
+        {
+          matchId: mid,
+          homeWin: c.homeWin,
+          draw: c.draw,
+          awayWin: c.awayWin,
+          total: c.total,
+          updatedAt: Timestamp.now(),
+        },
+        {merge: true}
+      );
+      docsWritten += 1;
+    }
+    await writer.close();
+
+    logger.info("backfillMatchPredictionStats complete", {
+      matchId,
+      matchesUpdated: docsWritten,
+      predictionsProcessed,
+    });
+
+    return {
+      matchId,
+      matchesUpdated: docsWritten,
+      predictionsProcessed,
+    };
+  } catch (err) {
+    logger.error("backfillMatchPredictionStats failed", err);
+    if (err instanceof HttpsError) throw err;
+    const e = err as any;
+    throw new HttpsError("internal", "backfillMatchPredictionStats failed", {
+      message: e?.message ? String(e.message) : String(err),
+    });
+  }
+});
+
 export const recalcPoints = onCall(async (request) => {
   try {
     logger.info("recalcPoints called", {

@@ -32,7 +32,7 @@ export default function MatchHero({
   lockLabel: string;
   kickoffMs: number;
   nowMs?: number;
-  distribution?: PredictionDistribution | null;
+  distribution: PredictionDistribution;
 }) {
   return (
     <section
@@ -148,16 +148,14 @@ export default function MatchHero({
             <Countdown targetMs={kickoffMs} />
           </div>
 
-          {distribution ? (
-            <div style={{ paddingTop: 6 }}>
-              <PredictionDistributionBar
-                title="現在の勝敗予測"
-                homePct={distribution.homeWinPct}
-                drawPct={distribution.drawPct}
-                awayPct={distribution.awayWinPct}
-              />
-            </div>
-          ) : null}
+          <div style={{ paddingTop: 6 }}>
+            <PredictionDistributionBar
+              title="現在の勝敗予測"
+              homePct={distribution.homeWinPct}
+              drawPct={distribution.drawPct}
+              awayPct={distribution.awayWinPct}
+            />
+          </div>
         </div>
       </div>
     </section>
