@@ -35,7 +35,7 @@ export default function ThirdPlaceRanking({
                   style={{
                     width: 44,
                     textAlign: "left",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
@@ -46,7 +46,7 @@ export default function ThirdPlaceRanking({
                   style={{
                     width: 32,
                     textAlign: "left",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
@@ -65,9 +65,9 @@ export default function ThirdPlaceRanking({
                 </th>
                 <th
                   style={{
-                    width: 40,
+                    width: 28,
                     textAlign: "right",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
@@ -76,31 +76,42 @@ export default function ThirdPlaceRanking({
                 </th>
                 <th
                   style={{
+                    width: 44,
+                    textAlign: "right",
+                    padding: "6px 4px",
+                    borderBottom: "1px solid #eee",
+                    fontSize: 12,
+                  }}
+                >
+                  GD
+                </th>
+                <th
+                  style={{
                     width: 52,
                     textAlign: "right",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
                 >
-                  得失
+                  +/-
                 </th>
                 <th
                   style={{
-                    width: 54,
+                    width: 44,
                     textAlign: "right",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
                 >
-                  勝点
+                  Pts
                 </th>
                 <th
                   style={{
-                    width: 92,
+                    width: 84,
                     textAlign: "left",
-                    padding: "6px 6px",
+                    padding: "6px 4px",
                     borderBottom: "1px solid #eee",
                     fontSize: 12,
                   }}
@@ -116,7 +127,7 @@ export default function ThirdPlaceRanking({
                   <tr key={`${r.groupNameJa}_${r.team.teamId}`} style={{ background: inTop8 ? "rgba(23,138,42,0.10)" : undefined }}>
                     <td
                       style={{
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #f2f2f2",
                         fontSize: 13,
                         fontWeight: inTop8 ? 700 : 400,
@@ -124,7 +135,7 @@ export default function ThirdPlaceRanking({
                     >
                       {idx + 1}
                     </td>
-                    <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2", fontSize: 13 }}>
+                    <td style={{ padding: "6px 4px", borderBottom: "1px solid #f2f2f2", fontSize: 13 }}>
                       {toGroupLetter(r.groupNameJa)}
                     </td>
                     <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
@@ -164,7 +175,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontSize: 13,
@@ -174,7 +185,7 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontSize: 13,
@@ -184,7 +195,17 @@ export default function ThirdPlaceRanking({
                     </td>
                     <td
                       style={{
-                        padding: "6px 6px",
+                        padding: "6px 4px",
+                        borderBottom: "1px solid #f2f2f2",
+                        textAlign: "right",
+                        fontSize: 13,
+                      }}
+                    >
+                      {r.team.gf}/{r.team.ga}
+                    </td>
+                    <td
+                      style={{
+                        padding: "6px 4px",
                         borderBottom: "1px solid #f2f2f2",
                         textAlign: "right",
                         fontWeight: 700,
@@ -193,7 +214,7 @@ export default function ThirdPlaceRanking({
                     >
                       {r.team.pts}
                     </td>
-                    <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
+                    <td style={{ padding: "6px 4px", borderBottom: "1px solid #f2f2f2" }}>
                       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                         {r.team.form.length ? (
                           r.team.form.map((m, i) => {

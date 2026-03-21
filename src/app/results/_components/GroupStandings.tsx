@@ -73,9 +73,9 @@ export default function GroupStandings({
                   <tr>
                     <th
                       style={{
-                        width: 36,
+                        width: 32,
                         textAlign: "left",
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #eee",
                         fontSize: 12,
                       }}
@@ -94,9 +94,9 @@ export default function GroupStandings({
                     </th>
                     <th
                       style={{
-                        width: 40,
+                        width: 28,
                         textAlign: "right",
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #eee",
                         fontSize: 12,
                       }}
@@ -105,31 +105,42 @@ export default function GroupStandings({
                     </th>
                     <th
                       style={{
+                        width: 44,
+                        textAlign: "right",
+                        padding: "6px 4px",
+                        borderBottom: "1px solid #eee",
+                        fontSize: 12,
+                      }}
+                    >
+                      GD
+                    </th>
+                    <th
+                      style={{
                         width: 52,
                         textAlign: "right",
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #eee",
                         fontSize: 12,
                       }}
                     >
-                      得失
+                      +/-
                     </th>
                     <th
                       style={{
-                        width: 54,
+                        width: 44,
                         textAlign: "right",
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #eee",
                         fontSize: 12,
                       }}
                     >
-                      勝点
+                      Pts
                     </th>
                     <th
                       style={{
-                        width: 92,
+                        width: 84,
                         textAlign: "left",
-                        padding: "6px 6px",
+                        padding: "6px 4px",
                         borderBottom: "1px solid #eee",
                         fontSize: 12,
                       }}
@@ -139,12 +150,14 @@ export default function GroupStandings({
                   </tr>
                 </thead>
                 <tbody>
-                  {g.teams.map((t, idx) => (
+                  {g.teams.map((t, idx) => {
+                    const rowBorder = idx === 1 ? "2px solid rgba(23,138,42,0.28)" : "1px solid #f2f2f2";
+                    return (
                     <tr key={t.teamId}>
-                      <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2", fontSize: 13 }}>
+                      <td style={{ padding: "6px 6px", borderBottom: rowBorder, fontSize: 13 }}>
                         {idx + 1}
                       </td>
-                      <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
+                      <td style={{ padding: "6px 6px", borderBottom: rowBorder }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
                           {localFlagSrc(teams.get(t.teamId)) ? (
                             <img
@@ -181,8 +194,8 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 6px",
-                          borderBottom: "1px solid #f2f2f2",
+                          padding: "6px 4px",
+                          borderBottom: rowBorder,
                           textAlign: "right",
                           fontSize: 13,
                         }}
@@ -191,8 +204,8 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 6px",
-                          borderBottom: "1px solid #f2f2f2",
+                          padding: "6px 4px",
+                          borderBottom: rowBorder,
                           textAlign: "right",
                           fontSize: 13,
                         }}
@@ -201,8 +214,18 @@ export default function GroupStandings({
                       </td>
                       <td
                         style={{
-                          padding: "6px 6px",
-                          borderBottom: "1px solid #f2f2f2",
+                          padding: "6px 4px",
+                          borderBottom: rowBorder,
+                          textAlign: "right",
+                          fontSize: 13,
+                        }}
+                      >
+                        {t.gf}/{t.ga}
+                      </td>
+                      <td
+                        style={{
+                          padding: "6px 4px",
+                          borderBottom: rowBorder,
                           textAlign: "right",
                           fontWeight: 700,
                           fontSize: 13,
@@ -210,7 +233,7 @@ export default function GroupStandings({
                       >
                         {t.pts}
                       </td>
-                      <td style={{ padding: "6px 6px", borderBottom: "1px solid #f2f2f2" }}>
+                      <td style={{ padding: "6px 4px", borderBottom: rowBorder }}>
                         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                           {t.form.length ? (
                             t.form.map((m, i) => {
@@ -241,7 +264,8 @@ export default function GroupStandings({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
