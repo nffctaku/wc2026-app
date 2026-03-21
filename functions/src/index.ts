@@ -11,7 +11,7 @@ import * as functionsV1 from "firebase-functions/v1";
 import * as logger from "firebase-functions/logger";
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 import {initializeApp} from "firebase-admin/app";
-import {getFirestore, Timestamp} from "firebase-admin/firestore";
+import {FieldValue, getFirestore, Timestamp} from "firebase-admin/firestore";
 
 // Start writing functions
 // https://firebase.google.com/docs/functions/typescript
@@ -56,6 +56,13 @@ type MatchDoc = {
   homeScore?: number;
   awayScore?: number;
 };
+
+function actualScore(m?: Partial<MatchDoc> | null): {home: number; away: number} | null {
+  if (!m) return null;
+  if (m.status !== "FINISHED") return null;
+  if (typeof m.homeScore !== "number" || typeof m.awayScore !== "number") return null;
+  return {home: m.homeScore, away: m.awayScore};
+}
 
 function outcome(home: number, away: number): "H" | "A" | "D" {
   if (home === away) return "D";
@@ -117,6 +124,88 @@ export const onPredictionWritten = functionsV1
       matchId,
       before: beforeOut,
       after: afterOut,
+    });
+  });
+
+export const onMatchWritten = functionsV1
+  .region("us-central1")
+  .firestore.document("matches/{matchId}")
+  .onWrite(async (change: functionsV1.Change<functionsV1.firestore.DocumentSnapshot>, context) => {
+    const matchId = context.params.matchId as string;
+    const before = (change.before.exists ? (change.before.data() as MatchDoc) : null) as MatchDoc | null;
+    const after = (change.after.exists ? (change.after.data() as MatchDoc) : null) as MatchDoc | null;
+
+    if (!after) return;
+
+    const beforeActual = actualScore(before);
+    const afterActual = actualScore(after);
+
+    if (!beforeActual && !afterActual) return;
+
+    const db = getFirestore();
+    const cfgSnap = await db.doc("tournamentConfig/current").get();
+    const scoringVersion = (cfgSnap.data() as {scoringVersion?: number} | undefined)?.scoringVersion ?? 1;
+
+    const predSnap = await db.collection("predictions").where("matchId", "==", matchId).get();
+    if (predSnap.empty) {
+      logger.info("onMatchWritten: no predictions", {matchId});
+      return;
+    }
+
+    const writer = db.bulkWriter();
+    let pointsWritten = 0;
+    let usersUpdated = 0;
+
+    for (const pDoc of predSnap.docs) {
+      const p = pDoc.data() as PredictionDoc;
+      if (typeof p.uid !== "string") continue;
+      if (typeof p.homeScore !== "number" || typeof p.awayScore !== "number") continue;
+
+      const oldPoints =
+        beforeActual ? calcPoints(beforeActual.home, beforeActual.away, p.homeScore, p.awayScore) : 0;
+      const newPoints =
+        afterActual ? calcPoints(afterActual.home, afterActual.away, p.homeScore, p.awayScore) : 0;
+      const delta = newPoints - oldPoints;
+
+      const umpId = `${p.uid}_${matchId}`;
+      const umpRef = db.doc(`userMatchPoints/${umpId}`);
+      writer.set(
+        umpRef,
+        {
+          uid: p.uid,
+          matchId,
+          matchNumber: after.matchNumber ?? before?.matchNumber ?? null,
+          points: newPoints,
+          scoringVersion,
+          updatedAt: Timestamp.now(),
+        },
+        {merge: true}
+      );
+      pointsWritten += 1;
+
+      if (delta !== 0) {
+        const usRef = db.doc(`userStats/${p.uid}`);
+        writer.set(
+          usRef,
+          {
+            uid: p.uid,
+            totalPoints: FieldValue.increment(delta),
+            scoringVersion,
+            updatedAt: Timestamp.now(),
+          },
+          {merge: true}
+        );
+        usersUpdated += 1;
+      }
+    }
+
+    await writer.close();
+    logger.info("onMatchWritten: points updated", {
+      matchId,
+      pointsWritten,
+      usersUpdated,
+      beforeFinished: Boolean(beforeActual),
+      afterFinished: Boolean(afterActual),
     });
   });
 
