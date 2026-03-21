@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   doc,
@@ -21,7 +21,6 @@ import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
 import { subscribeAuth } from "@/lib/firebase/auth";
 
 import MatchHero from "./_components/MatchHero";
-import PredictionCard from "./_components/PredictionCard";
 import { displayTeamName, formatKickoff, formatTs, localFlagSrc } from "./_lib/format";
 import type { PredictionDistribution } from "./_components/PredictionDistributionBar";
 
@@ -56,8 +55,12 @@ export default function MatchDetailPage() {
     awayWinPct: 0,
     total: 0,
   });
-  const [homeScore, setHomeScore] = useState<string>("");
-  const [awayScore, setAwayScore] = useState<string>("");
+  const [homeScore, setHomeScore] = useState<number>(0);
+  const [awayScore, setAwayScore] = useState<number>(0);
+
+  const hydratedPredRef = useRef(false);
+  const lastSavedRef = useRef<{ hs: number; as: number } | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     return subscribeAuth((u) => {
@@ -134,14 +137,20 @@ export default function MatchDetailPage() {
         const predId = `${uid}_${resolvedMatchId}`;
         const snap = await getDoc(doc(db, "predictions", predId));
         if (!snap.exists()) {
-          setHomeScore("");
-          setAwayScore("");
+          setHomeScore(0);
+          setAwayScore(0);
+          lastSavedRef.current = { hs: 0, as: 0 };
+          hydratedPredRef.current = true;
           return;
         }
 
         const p = snap.data() as PredictionDoc;
-        setHomeScore(String(p.homeScore));
-        setAwayScore(String(p.awayScore));
+        const hs = typeof p.homeScore === "number" ? p.homeScore : 0;
+        const as = typeof p.awayScore === "number" ? p.awayScore : 0;
+        setHomeScore(hs);
+        setAwayScore(as);
+        lastSavedRef.current = { hs, as };
+        hydratedPredRef.current = true;
       } catch (e) {
         setPredError(e instanceof Error ? e.message : String(e));
       } finally {
@@ -150,6 +159,15 @@ export default function MatchDetailPage() {
     }
 
     void run();
+  }, [uid, resolvedMatchId]);
+
+  useEffect(() => {
+    hydratedPredRef.current = false;
+    lastSavedRef.current = null;
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
   }, [uid, resolvedMatchId]);
 
   useEffect(() => {
@@ -206,8 +224,8 @@ export default function MatchDetailPage() {
       return;
     }
 
-    const hs = Number(homeScore);
-    const as = Number(awayScore);
+    const hs = homeScore;
+    const as = awayScore;
 
     if (!Number.isFinite(hs) || !Number.isFinite(as)) {
       setPredError("スコアは数値で入力してください");
@@ -248,6 +266,31 @@ export default function MatchDetailPage() {
       setPredBusy(false);
     }
   }
+
+  useEffect(() => {
+    if (!uid || !resolvedMatchId || !match || !lockInfo) return;
+    if (!hydratedPredRef.current) return;
+    if (lockInfo.locked) return;
+    if (predBusy) return;
+
+    const last = lastSavedRef.current;
+    if (last && last.hs === homeScore && last.as === awayScore) return;
+
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+    autoSaveTimerRef.current = setTimeout(() => {
+      void (async () => {
+        await onSavePrediction();
+        lastSavedRef.current = { hs: homeScore, as: awayScore };
+      })();
+    }, 600);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
+  }, [awayScore, homeScore, lockInfo, match, predBusy, resolvedMatchId, uid]);
 
   const kickoffDate = useMemo(() => {
     if (!match) return null;
@@ -291,26 +334,52 @@ export default function MatchDetailPage() {
             kickoffMs={match.kickoffAt.toDate().getTime()}
             nowMs={lockInfo?.now.getTime()}
             distribution={distribution}
-          />
 
-          <div style={{ padding: 18 }}>
-            <PredictionCard
-              lockedLabel={lockInfo ? (lockInfo.locked ? "締切済み" : "締切前") : ""}
-              uid={uid}
-              predError={predError}
-              predSaved={predSaved}
-              predBusy={predBusy}
-              canEditPrediction={canEditPrediction}
-              homeName={homeName}
-              awayName={awayName}
-              homeScore={homeScore}
-              awayScore={awayScore}
-              onHomeScoreChange={setHomeScore}
-              onAwayScoreChange={setAwayScore}
-              onSavePrediction={onSavePrediction}
-            />
-          </div>
+            lockedLabel={lockInfo ? (lockInfo.locked ? "締切済み" : "締切前") : ""}
+            uid={uid}
+            predError={predError}
+            predBusy={predBusy}
+            canEditPrediction={canEditPrediction}
+            homeScore={homeScore}
+            awayScore={awayScore}
+            onHomeScoreChange={setHomeScore}
+            onAwayScoreChange={setAwayScore}
+          />
         </>
+      ) : null}
+
+      {predSaved ? (
+        <div
+          style={{
+            position: "fixed",
+            left: 0,
+            right: 0,
+            bottom: 12,
+            display: "flex",
+            justifyContent: "center",
+            paddingLeft: 12,
+            paddingRight: 12,
+            pointerEvents: "none",
+          }}
+        >
+          <div
+            style={{
+              pointerEvents: "auto",
+              background: "rgba(9, 30, 15, 0.92)",
+              color: "rgba(255,255,255,0.92)",
+              border: "1px solid rgba(255,255,255,0.16)",
+              borderRadius: 999,
+              padding: "8px 12px",
+              fontSize: 12,
+              fontWeight: 800,
+              maxWidth: 520,
+              width: "100%",
+              textAlign: "center",
+            }}
+          >
+            {predSaved}
+          </div>
+        </div>
       ) : null}
     </div>
   );

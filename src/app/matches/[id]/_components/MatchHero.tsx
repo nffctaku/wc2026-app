@@ -6,6 +6,7 @@ import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
 
 import Countdown from "./Countdown";
 import PredictionDistributionBar, { type PredictionDistribution } from "./PredictionDistributionBar";
+import ScoreStepper from "./ScoreStepper";
 
 export default function MatchHero({
   match,
@@ -20,6 +21,16 @@ export default function MatchHero({
   kickoffMs,
   nowMs,
   distribution,
+
+  lockedLabel,
+  uid,
+  predError,
+  predBusy,
+  canEditPrediction,
+  homeScore,
+  awayScore,
+  onHomeScoreChange,
+  onAwayScoreChange,
 }: {
   match: MatchDoc;
   home: TeamDoc | null;
@@ -33,6 +44,16 @@ export default function MatchHero({
   kickoffMs: number;
   nowMs?: number;
   distribution: PredictionDistribution;
+
+  lockedLabel: string;
+  uid: string | null;
+  predError: string | null;
+  predBusy: boolean;
+  canEditPrediction: boolean;
+  homeScore: number;
+  awayScore: number;
+  onHomeScoreChange: (value: number) => void;
+  onAwayScoreChange: (value: number) => void;
 }) {
   return (
     <section
@@ -146,6 +167,54 @@ export default function MatchHero({
 
           <div style={{ display: "flex", justifyContent: "center" }}>
             <Countdown targetMs={kickoffMs} />
+          </div>
+
+          <div
+            style={{
+              marginTop: 8,
+              paddingTop: 8,
+              borderTop: "1px solid rgba(255,255,255,0.18)",
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+              <div style={{ fontWeight: 900 }}>スコア予想</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.70)", fontWeight: 700 }}>{lockedLabel}</div>
+            </div>
+
+            {!uid ? <div style={{ marginTop: 2, fontSize: 13 }}>予想の入力にはログインが必要です</div> : null}
+            {predError ? <pre style={{ color: "#ffb4ab", margin: "0" }}>{predError}</pre> : null}
+            {predBusy ? <div style={{ marginTop: 2, fontSize: 13 }}>予想を読込/保存中...</div> : null}
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr auto",
+                gap: 10,
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "grid", justifyItems: "center", gap: 4, minWidth: 0 }}>
+                <ScoreStepper
+                  value={homeScore}
+                  onChange={onHomeScoreChange}
+                  disabled={!canEditPrediction || predBusy}
+                  side="left"
+                />
+              </div>
+
+              <div style={{ fontWeight: 900, fontSize: 20, color: "rgba(255,255,255,0.85)", paddingBottom: 2 }}>:</div>
+
+              <div style={{ display: "grid", justifyItems: "center", gap: 4, minWidth: 0 }}>
+                <ScoreStepper
+                  value={awayScore}
+                  onChange={onAwayScoreChange}
+                  disabled={!canEditPrediction || predBusy}
+                  side="right"
+                />
+              </div>
+            </div>
           </div>
 
           <div style={{ paddingTop: 6 }}>
