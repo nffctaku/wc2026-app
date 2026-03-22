@@ -12,19 +12,31 @@ export default function MatchesPage() {
 
     lockMs,
     isLocked,
+    canEditInitial,
+
+    isRePredictWindow,
+    reLockMs,
+    canEditRe,
     championTeamId,
     setChampionTeamId,
+
+    championTeamId2,
+    setChampionTeamId2,
     teamOptions,
     best4Slots,
     best4Count,
     updateBest4Slot,
+
+    best4Slots2,
+    best4Count2,
+    updateBest4Slot2,
     gsOptions,
-    gsSlots,
+    groups,
+    gsQualifiedTeamIds,
     gsCount,
     gsMax,
-    updateGsSlot,
+    toggleGsQualified,
     onLogin,
-    onSave,
   } = useTournamentPredictions();
 
   return (
@@ -35,19 +47,28 @@ export default function MatchesPage() {
       error={error}
       lockMs={lockMs}
       isLocked={isLocked}
+      canEditInitial={canEditInitial}
+      isRePredictWindow={isRePredictWindow}
+      reLockMs={reLockMs}
+      canEditRe={canEditRe}
       championTeamId={championTeamId}
       onChampionChange={setChampionTeamId}
+      championTeamId2={championTeamId2}
+      onChampionChange2={setChampionTeamId2}
       teamOptions={teamOptions}
       best4Slots={best4Slots}
       best4Count={best4Count}
       onBest4SlotChange={updateBest4Slot}
+      best4Slots2={best4Slots2}
+      best4Count2={best4Count2}
+      onBest4SlotChange2={updateBest4Slot2}
       gsOptions={gsOptions}
-      gsSlots={gsSlots}
+      groups={groups}
+      gsQualifiedTeamIds={gsQualifiedTeamIds}
       gsCount={gsCount}
       gsMax={gsMax}
-      onGsSlotChange={updateGsSlot}
+      onToggleGsTeam={toggleGsQualified}
       onLogin={onLogin}
-      onSave={onSave}
       showSavedToLabel={true}
     />
   );

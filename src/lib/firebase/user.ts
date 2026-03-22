@@ -17,7 +17,9 @@ export type UserDoc = {
   xUrl: string | null;
   instagramUrl: string | null;
   championTeamId: string | null;
+  championTeamId2?: string | null;
   best4TeamIds?: string[] | null;
+  best4TeamIds2?: string[] | null;
   gsQualifiedTeamIds?: string[] | null;
   role: UserRole;
   createdAt: unknown;
@@ -85,7 +87,9 @@ export async function updateUserProfile(
     xUrl?: string | null;
     instagramUrl?: string | null;
     championTeamId?: string | null;
+    championTeamId2?: string | null;
     best4TeamIds?: string[] | null;
+    best4TeamIds2?: string[] | null;
     gsQualifiedTeamIds?: string[] | null;
   }
 ): Promise<void> {

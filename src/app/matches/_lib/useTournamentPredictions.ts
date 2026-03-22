@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   collection,
   doc,
@@ -17,17 +17,23 @@ import { computeStandings } from "@/app/results/_lib/standings";
 
 type TeamOption = { id: string; name: string };
 
-const GS_MAX = 2;
+const GS_PER_GROUP_MAX = 2;
 
 const GS_GROUP_RE = /^グループ\s*[Ａ-ＬA-L]/;
 
 const GS_SPECIAL_MERGE_IDS = ["PH_CODE_ITA", "PH_CODE_NIR", "PH_CODE_WAL", "PH_CODE_BIH"] as const;
-const GS_SPECIAL_MERGED_OPTION: TeamOption = { id: "PH_MERGED_ITA_NIR_WAL_BIH", name: "ITA/NIR/WAL/BIH" };
 
 type GroupBlock = {
   groupNameJa: string;
   teams: TeamOption[];
 };
+
+function normalizeTeamName(raw: string, code?: string | null): string {
+  const name = raw.trim();
+  if (code === "NZL") return "ニュージーランド";
+  if (/^new\s*zealand$/i.test(name)) return "ニュージーランド";
+  return name;
+}
 
 export function useTournamentPredictions(): {
   uid: string | null;
@@ -38,8 +44,18 @@ export function useTournamentPredictions(): {
   lockMs: number | null;
   isLocked: boolean;
 
+  canEditInitial: boolean;
+
+  isRePredictWindow: boolean;
+  reLockMs: number | null;
+
+  canEditRe: boolean;
+
   championTeamId: string;
   setChampionTeamId: (value: string) => void;
+
+  championTeamId2: string;
+  setChampionTeamId2: (value: string) => void;
 
   teamOptions: TeamOption[];
 
@@ -47,10 +63,11 @@ export function useTournamentPredictions(): {
   best4Count: number;
   updateBest4Slot: (slotIndex: number, teamId: string) => void;
 
-  gsOptions: TeamOption[];
-  gsSlots: string[];
-  updateGsSlot: (slotIndex: number, teamId: string) => void;
+  best4Slots2: string[];
+  best4Count2: number;
+  updateBest4Slot2: (slotIndex: number, teamId: string) => void;
 
+  gsOptions: TeamOption[];
   groups: GroupBlock[];
   gsQualifiedTeamIds: string[];
   gsCount: number;
@@ -68,13 +85,19 @@ export function useTournamentPredictions(): {
 
   const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
   const [groupStageMatches, setGroupStageMatches] = useState<Array<MatchDoc & { id: string }>>([]);
+  const [allMatches, setAllMatches] = useState<Array<MatchDoc & { id: string }>>([]);
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
 
   const [lockMs, setLockMs] = useState<number | null>(null);
+  const [reLockMs, setReLockMs] = useState<number | null>(null);
 
   const [championTeamId, setChampionTeamId] = useState<string>("");
+  const [championTeamId2, setChampionTeamId2] = useState<string>("");
   const [best4TeamIds, setBest4TeamIds] = useState<string[]>([]);
+  const [best4TeamIds2, setBest4TeamIds2] = useState<string[]>([]);
   const [gsQualifiedTeamIds, setGsQualifiedTeamIds] = useState<string[]>([]);
+
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     const c = championTeamId.trim();
@@ -84,6 +107,15 @@ export function useTournamentPredictions(): {
       return [c, ...prev].slice(0, 4);
     });
   }, [championTeamId]);
+
+  useEffect(() => {
+    const c = championTeamId2.trim();
+    if (!c) return;
+    setBest4TeamIds2((prev) => {
+      if (prev.includes(c)) return prev;
+      return [c, ...prev].slice(0, 4);
+    });
+  }, [championTeamId2]);
 
   useEffect(() => {
     return subscribeAuth((u) => {
@@ -109,6 +141,8 @@ export function useTournamentPredictions(): {
           id: d.id,
           ...(d.data() as MatchDoc),
         })) as unknown as ({ id: string }[] & MatchDoc[]);
+
+        setAllMatches(matchRows as unknown as Array<MatchDoc & { id: string }>);
 
         let earliestKickoff: number | null = null;
         for (const m of matchRows as unknown as Array<MatchDoc & { id: string }>) {
@@ -140,8 +174,11 @@ export function useTournamentPredictions(): {
     if (!uid) {
       setUserDoc(null);
       setChampionTeamId("");
+      setChampionTeamId2("");
       setBest4TeamIds([]);
+      setBest4TeamIds2([]);
       setGsQualifiedTeamIds([]);
+      hydratedRef.current = false;
       return;
     }
 
@@ -154,17 +191,77 @@ export function useTournamentPredictions(): {
           setChampionTeamId("");
           setBest4TeamIds([]);
           setGsQualifiedTeamIds([]);
+          hydratedRef.current = true;
           return;
         }
         const data = snap.data() as UserDoc;
         setUserDoc(data);
         setChampionTeamId(data.championTeamId ?? "");
+        setChampionTeamId2(data.championTeamId2 ?? "");
         setBest4TeamIds(Array.isArray(data.best4TeamIds) ? data.best4TeamIds.filter(Boolean) : []);
+        setBest4TeamIds2(Array.isArray(data.best4TeamIds2) ? data.best4TeamIds2.filter(Boolean) : []);
         setGsQualifiedTeamIds(Array.isArray(data.gsQualifiedTeamIds) ? data.gsQualifiedTeamIds.filter(Boolean) : []);
+        hydratedRef.current = true;
       },
       (e) => setError(e instanceof Error ? e.message : String(e))
     );
   }, [uid]);
+
+  const isRePredictWindow = useMemo(() => {
+    if (allMatches.length === 0) return false;
+
+    const groupMatches = allMatches.filter((m) => {
+      const stage = typeof m.stageNameJa === "string" ? m.stageNameJa : "";
+      const group = typeof m.groupNameJa === "string" ? m.groupNameJa : "";
+      return stage.includes("グループ") || group.includes("グループ");
+    });
+
+    if (groupMatches.length === 0) return false;
+    const allGroupFinished = groupMatches.every((m) => m.status === "FINISHED");
+    if (!allGroupFinished) return false;
+
+    let koKickoffMs: number | null = null;
+    for (const m of allMatches) {
+      const stage = typeof m.stageNameJa === "string" ? m.stageNameJa : "";
+      const group = typeof m.groupNameJa === "string" ? m.groupNameJa : "";
+      const isGroup = stage.includes("グループ") || group.includes("グループ");
+      if (isGroup) continue;
+      const kickoffAny = (m as any).kickoffAt;
+      const ms = kickoffAny && typeof kickoffAny.toMillis === "function" ? kickoffAny.toMillis() : null;
+      if (typeof ms !== "number") continue;
+      koKickoffMs = koKickoffMs === null ? ms : Math.min(koKickoffMs, ms);
+    }
+
+    setReLockMs(koKickoffMs);
+    if (koKickoffMs === null) return false;
+    return Date.now() < koKickoffMs;
+  }, [allMatches]);
+
+  const canEditInitial = lockMs === null || Date.now() < lockMs;
+  const canEditRe = isRePredictWindow && (reLockMs === null || Date.now() < reLockMs);
+
+  useEffect(() => {
+    if (!uid) return;
+    if (!hydratedRef.current) return;
+
+    if (!canEditInitial && !canEditRe) return;
+
+    const id = window.setTimeout(() => {
+      void onSave();
+    }, 500);
+
+    return () => window.clearTimeout(id);
+  }, [
+    uid,
+    lockMs,
+    reLockMs,
+    isRePredictWindow,
+    championTeamId,
+    championTeamId2,
+    best4TeamIds,
+    best4TeamIds2,
+    gsQualifiedTeamIds,
+  ]);
 
   const gsStandingsGroups = useMemo(() => {
     if (groupStageMatches.length === 0 || teams.size === 0) return [];
@@ -182,6 +279,17 @@ export function useTournamentPredictions(): {
     return slots;
   }, [best4TeamIds, championTeamId]);
 
+  const best4Slots2 = useMemo(() => {
+    const c = championTeamId2.trim();
+    const normalized = best4TeamIds2.filter(Boolean).filter((x) => x !== c);
+    const slots = ["", "", "", ""];
+    if (c) slots[0] = c;
+    for (let i = 0; i < Math.min(3, normalized.length); i++) {
+      slots[i + 1] = normalized[i] ?? "";
+    }
+    return slots;
+  }, [best4TeamIds2, championTeamId2]);
+
   const groups = useMemo(() => {
     const blocks: GroupBlock[] = [];
     for (const g of gsStandingsGroups) {
@@ -192,7 +300,8 @@ export function useTournamentPredictions(): {
       const options: TeamOption[] = g.teams
         .map((t) => {
           const doc = teams.get(t.teamId);
-          const name = (typeof doc?.nameJa === "string" && doc.nameJa.trim()) ? doc.nameJa : t.teamLabel;
+          const baseName = typeof doc?.nameJa === "string" && doc.nameJa.trim() ? doc.nameJa : t.teamLabel;
+          const name = normalizeTeamName(baseName, doc?.code ?? null);
           return { id: t.teamId, name };
         })
         .sort((a, b) => a.name.localeCompare(b.name, "ja"));
@@ -211,7 +320,6 @@ export function useTournamentPredictions(): {
 
     const byId = new Map<string, TeamOption>();
     for (const t of base) byId.set(t.id, t);
-    byId.set(GS_SPECIAL_MERGED_OPTION.id, GS_SPECIAL_MERGED_OPTION);
 
     return Array.from(byId.values()).sort((a, b) => a.name.localeCompare(b.name, "ja"));
   }, [groups]);
@@ -219,23 +327,6 @@ export function useTournamentPredictions(): {
   const teamOptions = useMemo(() => {
     return gsOptions;
   }, [gsOptions]);
-
-  const gsSlots = useMemo(() => {
-    const normalized = gsQualifiedTeamIds.filter(Boolean);
-    const slots = ["", ""];
-    for (let i = 0; i < Math.min(GS_MAX, normalized.length); i++) {
-      slots[i] = normalized[i] ?? "";
-    }
-    return slots;
-  }, [gsQualifiedTeamIds]);
-
-  function updateGsSlot(slotIndex: number, teamId: string) {
-    if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= GS_MAX) return;
-    const next = [...gsSlots];
-    next[slotIndex] = teamId;
-    const unique = Array.from(new Set(next.filter(Boolean)));
-    setGsQualifiedTeamIds(unique.slice(0, GS_MAX));
-  }
 
   function onLogin() {
     void signInWithGoogle();
@@ -252,32 +343,72 @@ export function useTournamentPredictions(): {
     setBest4TeamIds(merged.slice(0, 4));
   }
 
+  function updateBest4Slot2(slotIndex: number, teamId: string) {
+    if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex > 3) return;
+    if (slotIndex === 0) return;
+    const next = [...best4Slots2];
+    next[slotIndex] = teamId;
+    const c = championTeamId2.trim();
+    const unique = Array.from(new Set(next.filter(Boolean).filter((x) => x !== c)));
+    const merged = c ? [c, ...unique] : unique;
+    setBest4TeamIds2(merged.slice(0, 4));
+  }
+
   function toggleGsQualified(teamId: string) {
     if (!teamId) return;
+    if (lockMs !== null && Date.now() >= lockMs) return;
     if (gsQualifiedTeamIds.includes(teamId)) {
       setGsQualifiedTeamIds(gsQualifiedTeamIds.filter((x) => x !== teamId));
       return;
     }
-    if (gsQualifiedTeamIds.length >= GS_MAX) return;
+
+    const teamGroupById = new Map<string, string>();
+    for (const g of groups) {
+      for (const t of g.teams) teamGroupById.set(t.id, g.groupNameJa);
+    }
+
+    const group = teamGroupById.get(teamId);
+    if (!group) return;
+
+    const selectedInGroup = gsQualifiedTeamIds.filter((id) => teamGroupById.get(id) === group);
+    if (selectedInGroup.length >= GS_PER_GROUP_MAX) return;
+
     setGsQualifiedTeamIds([...gsQualifiedTeamIds, teamId]);
   }
 
   async function onSave() {
     if (!uid) return;
-    if (lockMs !== null && Date.now() >= lockMs) return;
+    if (!canEditInitial && !canEditRe) return;
+
     setSaving(true);
     setError(null);
     try {
       const payload: Partial<UserDoc> = {
-        championTeamId: championTeamId.trim() ? championTeamId.trim() : null,
-        best4TeamIds: (() => {
-          const c = championTeamId.trim();
-          const unique = Array.from(new Set(best4Slots.filter(Boolean)));
-          if (c && !unique.includes(c)) unique.unshift(c);
-          const list = unique.slice(0, 4);
-          return list.length ? list : null;
-        })(),
-        gsQualifiedTeamIds: gsQualifiedTeamIds.length ? gsQualifiedTeamIds : null,
+        ...(canEditInitial
+          ? {
+              championTeamId: championTeamId.trim() ? championTeamId.trim() : null,
+              best4TeamIds: (() => {
+                const c = championTeamId.trim();
+                const unique = Array.from(new Set(best4Slots.filter(Boolean)));
+                if (c && !unique.includes(c)) unique.unshift(c);
+                const list = unique.slice(0, 4);
+                return list.length ? list : null;
+              })(),
+              gsQualifiedTeamIds: gsQualifiedTeamIds.length ? gsQualifiedTeamIds : null,
+            }
+          : {}),
+        ...(canEditRe
+          ? {
+              championTeamId2: championTeamId2.trim() ? championTeamId2.trim() : null,
+              best4TeamIds2: (() => {
+                const c = championTeamId2.trim();
+                const unique = Array.from(new Set(best4Slots2.filter(Boolean)));
+                if (c && !unique.includes(c)) unique.unshift(c);
+                const list = unique.slice(0, 4);
+                return list.length ? list : null;
+              })(),
+            }
+          : {}),
       };
       await setDoc(doc(db, "users", uid), payload, { merge: true });
     } catch (e) {
@@ -295,22 +426,37 @@ export function useTournamentPredictions(): {
 
     lockMs,
     isLocked: lockMs !== null && Date.now() >= lockMs,
+
+    canEditInitial,
+
+    isRePredictWindow,
+    reLockMs,
+
+    canEditRe,
+
     championTeamId,
     setChampionTeamId,
+
+    championTeamId2,
+    setChampionTeamId2,
+
     teamOptions,
+
     best4Slots,
     best4Count: best4TeamIds.filter(Boolean).length,
     updateBest4Slot,
 
-    gsOptions,
-    gsSlots,
-    updateGsSlot,
+    best4Slots2,
+    best4Count2: best4TeamIds2.filter(Boolean).length,
+    updateBest4Slot2,
 
+    gsOptions,
     groups,
     gsQualifiedTeamIds,
-    gsCount: gsQualifiedTeamIds.length,
-    gsMax: GS_MAX,
+    gsCount: gsQualifiedTeamIds.filter(Boolean).length,
+    gsMax: groups.length * GS_PER_GROUP_MAX,
     toggleGsQualified,
+
     onLogin,
     onSave,
     userDoc,
