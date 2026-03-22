@@ -165,6 +165,20 @@ export default function AppHeader() {
             className="appHeaderLogo"
           />
         </Link>
+
+        <nav className="appHeaderMenu" aria-label="Header menu">
+          {menuItems.map((item) =>
+            item.external ? (
+              <a key={item.label} className="appHeaderMenuItem" href={item.href} target="_blank" rel="noreferrer">
+                {item.label}
+              </a>
+            ) : (
+              <Link key={item.label} className="appHeaderMenuItem" href={item.href}>
+                {item.label}
+              </Link>
+            )
+          )}
+        </nav>
       </header>
 
       <div

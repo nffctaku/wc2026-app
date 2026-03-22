@@ -17,6 +17,50 @@
   background-color: var(--background);
 }
 
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation: homeBgFade 18s linear infinite;
+  will-change: opacity;
+}
+
+.bg1 {
+  background-image: url("/52.png");
+  animation-delay: 0s;
+}
+
+.bg2 {
+  background-image: url("/56.png");
+  animation-delay: 6s;
+}
+
+.bg3 {
+  background-image: url("/57.png");
+  animation-delay: 12s;
+}
+
+@keyframes homeBgFade {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  33% {
+    opacity: 1;
+  }
+  41% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 .main {
   display: flex;
   min-height: 100vh;

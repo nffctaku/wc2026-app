@@ -65,7 +65,7 @@ export default function HomeCountdown(props: { kickoffIso: string }) {
 
     return (
       <div style={{ display: "grid", gap: 10 }}>
-        <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>あと</div>
+        <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>OPENING MATCH</div>
         <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
           <PlaceholderUnit label="Days" />
           <PlaceholderUnit label="Hours" />
@@ -133,7 +133,7 @@ export default function HomeCountdown(props: { kickoffIso: string }) {
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
-      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>あと</div>
+      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>OPENING MATCH</div>
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
         <CircleUnit value={daysText} label="Days" progress={daysProgress} />
         <CircleUnit value={hoursText} label="Hours" progress={hoursProgress} />

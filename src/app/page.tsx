@@ -14,11 +14,8 @@ export default function Home() {
       className={styles.page}
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
-        backgroundImage: "url('/52.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
+        backgroundColor: "#040913",
+        backgroundImage: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
         position: "relative",
         ["--background" as any]: "transparent",
         ["--foreground" as any]: "transparent",
@@ -29,6 +26,9 @@ export default function Home() {
         ["--button-primary-hover" as any]: "rgba(255,255,255,0.86)",
       }}
     >
+      <div className={`${styles.bgLayer} ${styles.bg1}`} />
+      <div className={`${styles.bgLayer} ${styles.bg2}`} />
+      <div className={`${styles.bgLayer} ${styles.bg3}`} />
       <div
         style={{
           position: "absolute",
