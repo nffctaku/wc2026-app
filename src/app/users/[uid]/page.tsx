@@ -12,7 +12,21 @@ import useProfileStats from "@/app/me/_lib/useProfileStats";
 export default function UserProfilePage({ params }: { params: Promise<{ uid: string }> }) {
   const { uid } = use(params);
 
-  const { busy, error, userDoc, teams, totalPoints, ranking, totalUsers, predictionCount, perfectRate, outcomeRate } = useProfileStats(uid, {
+  const {
+    busy,
+    error,
+    userDoc,
+    teams,
+    totalPoints,
+    ranking,
+    totalUsers,
+    predictionCount,
+    perfectRate,
+    outcomeRate,
+    eligibleFinishedCount,
+    perfectHitCount,
+    outcomeHitCount,
+  } = useProfileStats(uid, {
     subscribeUserDoc: false,
   });
 
@@ -59,6 +73,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ uid: str
                 label="完全的中率"
                 unit="%"
                 progress={typeof perfectRate === "number" ? perfectRate / 100 : 0}
+                subValue={
+                  typeof perfectHitCount === "number" && typeof eligibleFinishedCount === "number"
+                    ? `${perfectHitCount}/${eligibleFinishedCount}`
+                    : undefined
+                }
                 accentColor={
                   typeof perfectRate === "number"
                     ? perfectRate <= 30
@@ -74,6 +93,11 @@ export default function UserProfilePage({ params }: { params: Promise<{ uid: str
                 label="勝敗的中率"
                 unit="%"
                 progress={typeof outcomeRate === "number" ? outcomeRate / 100 : 0}
+                subValue={
+                  typeof outcomeHitCount === "number" && typeof eligibleFinishedCount === "number"
+                    ? `${outcomeHitCount}/${eligibleFinishedCount}`
+                    : undefined
+                }
                 accentColor={
                   typeof outcomeRate === "number"
                     ? outcomeRate <= 30

@@ -22,6 +22,9 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
   const [predictionCount, setPredictionCount] = useState<number | null>(null);
   const [perfectRate, setPerfectRate] = useState<number | null>(null);
   const [outcomeRate, setOutcomeRate] = useState<number | null>(null);
+  const [eligibleFinishedCount, setEligibleFinishedCount] = useState<number | null>(null);
+  const [perfectHitCount, setPerfectHitCount] = useState<number | null>(null);
+  const [outcomeHitCount, setOutcomeHitCount] = useState<number | null>(null);
 
   const userDocRef = useMemo(() => {
     if (!uid) return null;
@@ -88,6 +91,9 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
         setPredictionCount(null);
         setPerfectRate(null);
         setOutcomeRate(null);
+        setEligibleFinishedCount(null);
+        setPerfectHitCount(null);
+        setOutcomeHitCount(null);
         return;
       }
 
@@ -161,10 +167,16 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
 
           setPerfectRate(perfectPct);
           setOutcomeRate(outcomePct);
+          setEligibleFinishedCount(eligible);
+          setPerfectHitCount(perfect);
+          setOutcomeHitCount(outcome);
         } catch {
           setPredictionCount(null);
           setPerfectRate(null);
           setOutcomeRate(null);
+          setEligibleFinishedCount(null);
+          setPerfectHitCount(null);
+          setOutcomeHitCount(null);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -187,5 +199,8 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
     predictionCount,
     perfectRate,
     outcomeRate,
+    eligibleFinishedCount,
+    perfectHitCount,
+    outcomeHitCount,
   };
 }

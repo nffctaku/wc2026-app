@@ -156,6 +156,10 @@ export default function RankingPage() {
     });
   }, [dailyRows, totalRows, viewMode]);
 
+  const participantCount = useMemo(() => {
+    return viewMode === "daily" ? dailyRows.length : totalRows.length;
+  }, [dailyRows.length, totalRows.length, viewMode]);
+
   const rankedTop = ranked.slice(0, 50);
 
   const top3 = rankedTop.slice(0, 3);
@@ -367,7 +371,20 @@ export default function RankingPage() {
                   borderTop: "1px solid rgba(0,0,0,0.06)",
                 }}
               >
-                <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.60)", textAlign: "center" }}>{r.rank}</div>
+                <div
+                  style={{
+                    fontWeight: 900,
+                    color: "rgba(0,0,0,0.60)",
+                    textAlign: "center",
+                    display: "inline-flex",
+                    alignItems: "baseline",
+                    justifyContent: "center",
+                    gap: 2,
+                  }}
+                >
+                  <span>{r.rank}</span>
+                  <span style={{ fontSize: 9, opacity: 0.7 }}>/{participantCount}</span>
+                </div>
                 <div
                   style={{
                     width: 34,

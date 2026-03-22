@@ -18,8 +18,20 @@ export default function MePage() {
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   const uid = user?.uid ?? null;
-  const { error: statsError, userDoc, teams, totalPoints, ranking, totalUsers, predictionCount, perfectRate, outcomeRate } =
-    useProfileStats(uid, { subscribeUserDoc: true });
+  const {
+    error: statsError,
+    userDoc,
+    teams,
+    totalPoints,
+    ranking,
+    totalUsers,
+    predictionCount,
+    perfectRate,
+    outcomeRate,
+    eligibleFinishedCount,
+    perfectHitCount,
+    outcomeHitCount,
+  } = useProfileStats(uid, { subscribeUserDoc: true });
 
   useEffect(() => {
     return subscribeAuth((u) => {
@@ -28,9 +40,7 @@ export default function MePage() {
     });
   }, []);
 
-  useEffect(() => {
-    if (statsError) setError(statsError);
-  }, [statsError]);
+  const displayError = error ?? statsError;
 
   async function onClickLogin() {
     setError(null);
@@ -109,6 +119,11 @@ export default function MePage() {
                 label="完全的中率"
                 unit="%"
                 progress={typeof perfectRate === "number" ? perfectRate / 100 : 0}
+                subValue={
+                  typeof perfectHitCount === "number" && typeof eligibleFinishedCount === "number"
+                    ? `${perfectHitCount}/${eligibleFinishedCount}`
+                    : undefined
+                }
                 accentColor={
                   typeof perfectRate === "number"
                     ? perfectRate <= 30
@@ -124,6 +139,11 @@ export default function MePage() {
                 label="勝敗的中率"
                 unit="%"
                 progress={typeof outcomeRate === "number" ? outcomeRate / 100 : 0}
+                subValue={
+                  typeof outcomeHitCount === "number" && typeof eligibleFinishedCount === "number"
+                    ? `${outcomeHitCount}/${eligibleFinishedCount}`
+                    : undefined
+                }
                 accentColor={
                   typeof outcomeRate === "number"
                     ? outcomeRate <= 30
@@ -199,23 +219,54 @@ export default function MePage() {
 
                 <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "0 0 auto" }}>
                   {userDoc?.xUrl ? (
-                    <a href={userDoc.xUrl} target="_blank" rel="noreferrer" style={{ fontWeight: 900, fontSize: 32, color: "#000", textDecoration: "none" }}>
-                      X
+                    <a
+                      href={userDoc.xUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label="X"
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, color: "#000", textDecoration: "none" }}
+                    >
+                      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ display: "block" }}>
+                        <path
+                          fill="currentColor"
+                          d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.3L6.4 22H3.3l7.3-8.4L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.5 3.9H4.7L17.8 20Z"
+                        />
+                      </svg>
                     </a>
                   ) : (
-                    <div style={{ fontWeight: 900, fontSize: 32, color: "rgba(0,0,0,0.18)" }}>X</div>
+                    <div aria-label="X" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, color: "rgba(0,0,0,0.18)" }}>
+                      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ display: "block" }}>
+                        <path
+                          fill="currentColor"
+                          d="M18.9 2H22l-6.8 7.8L23 22h-6.2l-4.9-6.3L6.4 22H3.3l7.3-8.4L1 2h6.3l4.4 5.8L18.9 2Zm-1.1 18h1.7L6.5 3.9H4.7L17.8 20Z"
+                        />
+                      </svg>
+                    </div>
                   )}
                   {userDoc?.instagramUrl ? (
                     <a
                       href={userDoc.instagramUrl}
                       target="_blank"
                       rel="noreferrer"
-                      style={{ fontWeight: 900, fontSize: 30, color: "#e1306c", textDecoration: "none" }}
+                      aria-label="Instagram"
+                      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, color: "#e1306c", textDecoration: "none" }}
                     >
-                      IG
+                      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ display: "block" }}>
+                        <path
+                          fill="currentColor"
+                          d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4h-9Zm4.5 4a6 6 0 1 1 0 12a6 6 0 0 1 0-12Zm0 2a4 4 0 1 0 0 8a4 4 0 0 0 0-8Zm6.4-2.6a1.2 1.2 0 1 1 0 2.4a1.2 1.2 0 0 1 0-2.4Z"
+                        />
+                      </svg>
                     </a>
                   ) : (
-                    <div style={{ fontWeight: 900, fontSize: 30, color: "rgba(0,0,0,0.18)" }}>IG</div>
+                    <div aria-label="Instagram" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, color: "rgba(0,0,0,0.18)" }}>
+                      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style={{ display: "block" }}>
+                        <path
+                          fill="currentColor"
+                          d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4h-9Zm4.5 4a6 6 0 1 1 0 12a6 6 0 0 1 0-12Zm0 2a4 4 0 1 0 0 8a4 4 0 0 0 0-8Zm6.4-2.6a1.2 1.2 0 1 1 0 2.4a1.2 1.2 0 0 1 0-2.4Z"
+                        />
+                      </svg>
+                    </div>
                   )}
                 </div>
               </div>
@@ -231,7 +282,7 @@ export default function MePage() {
               <div style={{ color: "rgba(0,0,0,0.65)", fontWeight: 700 }}>{championName ?? "未設定"}</div>
             </div>
 
-            {error ? <p style={{ color: "#b00020", whiteSpace: "pre-wrap" }}>{error}</p> : null}
+            {displayError ? <p style={{ color: "#b00020", whiteSpace: "pre-wrap" }}>{displayError}</p> : null}
           </div>
 
           {uid ? (

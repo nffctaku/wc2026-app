@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { collection, doc, getDocs, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { getDownloadURL, ref as storageRef, uploadBytes } from "firebase/storage";
 
 import styles from "../../page.module.css";
@@ -10,7 +10,6 @@ import styles from "../../page.module.css";
 import { auth, db, storage } from "@/lib/firebase/client";
 import { signInWithGoogle, signOut, subscribeAuth } from "@/lib/firebase/auth";
 import { updateUserProfile, type UserDoc } from "@/lib/firebase/user";
-import type { TeamDoc } from "@/lib/fifa/normalize";
 
 export default function MeEditPage() {
   const [user, setUser] = useState(() => auth.currentUser);
@@ -20,9 +19,7 @@ export default function MeEditPage() {
   const [photoUrlInput, setPhotoUrlInput] = useState("");
   const [xUrlInput, setXUrlInput] = useState("");
   const [instagramUrlInput, setInstagramUrlInput] = useState("");
-  const [championTeamId, setChampionTeamId] = useState<string>("");
 
-  const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +46,6 @@ export default function MeEditPage() {
       setPhotoUrlInput("");
       setXUrlInput("");
       setInstagramUrlInput("");
-      setChampionTeamId("");
       return;
     }
 
@@ -60,7 +56,6 @@ export default function MeEditPage() {
         setPhotoUrlInput("");
         setXUrlInput("");
         setInstagramUrlInput("");
-        setChampionTeamId("");
         return;
       }
       const data = snap.data() as UserDoc;
@@ -69,25 +64,8 @@ export default function MeEditPage() {
       setPhotoUrlInput(data.photoURL ?? "");
       setXUrlInput(data.xUrl ?? "");
       setInstagramUrlInput(data.instagramUrl ?? "");
-      setChampionTeamId(data.championTeamId ?? "");
     });
   }, [userDocRef]);
-
-  useEffect(() => {
-    async function run() {
-      try {
-        const snap = await getDocs(collection(db, "teams"));
-        const map = new Map<string, TeamDoc>();
-        for (const d of snap.docs) {
-          map.set(d.id, d.data() as TeamDoc);
-        }
-        setTeams(map);
-      } catch {
-        setTeams(new Map());
-      }
-    }
-    void run();
-  }, []);
 
   async function onClickLogin() {
     setError(null);
@@ -153,7 +131,6 @@ export default function MeEditPage() {
         photoURL: normalizeUrl(photoUrlInput),
         xUrl: normalizeUrl(xUrlInput),
         instagramUrl: normalizeUrl(instagramUrlInput),
-        championTeamId: championTeamId.trim() ? championTeamId.trim() : null,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -278,20 +255,6 @@ export default function MeEditPage() {
                   placeholder="https://www.instagram.com/..."
                   style={{ padding: 8, border: "1px solid #ccc", borderRadius: 6 }}
                 />
-              </label>
-
-              <label style={{ display: "grid", gap: 4 }}>
-                <span>優勝チーム予想</span>
-                <select value={championTeamId} onChange={(e) => setChampionTeamId(e.target.value)} style={{ padding: 8, border: "1px solid #ccc", borderRadius: 6 }}>
-                  <option value="">未設定</option>
-                  {Array.from(teams.entries())
-                    .sort((a, b) => (a[1].nameJa ?? a[0]).localeCompare(b[1].nameJa ?? b[0], "ja"))
-                    .map(([id, t]) => (
-                      <option key={id} value={id}>
-                        {t.nameJa ?? id}
-                      </option>
-                    ))}
-                </select>
               </label>
 
               <button onClick={onSaveProfile} disabled={saving || uploadingPhoto} style={{ padding: 10, borderRadius: 999, border: "1px solid #ccc" }}>

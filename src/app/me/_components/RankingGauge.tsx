@@ -5,6 +5,7 @@ import React from "react";
 export default function RankingGauge(props: { points: number | null; rank: number | null; total: number | null }) {
   const p = typeof props.points === "number" ? props.points : null;
   const r = typeof props.rank === "number" ? props.rank : null;
+  const t = typeof props.total === "number" ? props.total : null;
   const maxPoints = 6540;
   const rawProgress = p != null ? p / maxPoints : 0;
   let progress = Math.max(0, Math.min(1, rawProgress));
@@ -61,8 +62,19 @@ export default function RankingGauge(props: { points: number | null; rank: numbe
         <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
           <div style={{ display: "grid", justifyItems: "center", gap: 6 }}>
             <div style={{ fontSize: 14, fontWeight: 900, color: "rgba(0,0,0,0.55)" }}>RANKING</div>
-            <div style={{ fontWeight: 900, fontSize: 52, lineHeight: "52px", color: "#3b82f6" }}>
-              {r != null ? r.toLocaleString("ja-JP") : "-"}
+            <div
+              style={{
+                fontWeight: 900,
+                fontSize: 52,
+                lineHeight: "52px",
+                color: "#3b82f6",
+                display: "inline-flex",
+                alignItems: "baseline",
+                gap: 4,
+              }}
+            >
+              <span>{r != null ? r.toLocaleString("ja-JP") : "-"}</span>
+              {t != null ? <span style={{ fontSize: 12, opacity: 0.55 }}>/ {t.toLocaleString("ja-JP")}</span> : null}
             </div>
             <div style={{ display: "grid", justifyItems: "center", gap: 0 }}>
               <div style={{ fontWeight: 900, fontSize: 18, lineHeight: "18px", color: "#a855f7" }}>
