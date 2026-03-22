@@ -15,7 +15,7 @@ export default function Home() {
       style={{
         minHeight: "100vh",
         background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
-        backgroundImage: "url('/50.png')",
+        backgroundImage: "url('/52.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

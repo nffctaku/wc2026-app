@@ -49,9 +49,9 @@ function initial(name: string): string {
 }
 
 function rankColor(rank: number): string {
-  if (rank === 1) return "#f4c542";
-  if (rank === 2) return "#c0c0c0";
-  if (rank === 3) return "#cd7f32";
+  if (rank === 1) return "#d4a514";
+  if (rank === 2) return "#9aa0a6";
+  if (rank === 3) return "#b86b21";
   if (rank >= 5 && rank <= 10) return "#9aa0a6";
   return "rgba(0,0,0,0.55)";
 }
@@ -129,15 +129,23 @@ export default function HomeTopRanking(props: { limit?: number }) {
             gap: 10,
             padding: "10px 12px",
             borderRadius: 14,
-            border: "1px solid rgba(0,0,0,0.08)",
-            background: "rgba(255,255,255,0.92)",
+            border: "1px solid rgba(255,255,255,0.14)",
+            background: "rgba(255,255,255,0.68)",
             textDecoration: "none",
             color: "inherit",
           };
 
           const body = (
             <>
-              <div style={{ fontWeight: 900, color: rankColor(rank), textAlign: "center" }}>{rank}</div>
+              <div
+                style={{
+                  fontWeight: 900,
+                  color: rankColor(rank),
+                  textAlign: "center",
+                }}
+              >
+                {rank}
+              </div>
 
               <div
                 style={{

@@ -162,8 +162,8 @@ export default function HomeTodayMatches(props: { max?: number }) {
                 alignItems: "center",
                 padding: "10px 12px",
                 borderRadius: 14,
-                border: "1px solid rgba(0,0,0,0.08)",
-                background: "rgba(255,255,255,0.92)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                background: "rgba(255,255,255,0.68)",
                 textDecoration: "none",
                 color: "inherit",
               }}
