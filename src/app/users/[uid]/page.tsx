@@ -42,7 +42,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ uid: str
               width: "100%",
               borderRadius: 22,
               padding: 20,
-              background: "#fff",
+              background: "rgba(255, 251, 235, 0.98)",
               border: "1px solid rgba(0,0,0,0.08)",
               boxShadow: "0 10px 30px rgba(16,24,40,0.08)",
               position: "relative",
@@ -59,17 +59,44 @@ export default function UserProfilePage({ params }: { params: Promise<{ uid: str
                 label="完全的中率"
                 unit="%"
                 progress={typeof perfectRate === "number" ? perfectRate / 100 : 0}
+                accentColor={
+                  typeof perfectRate === "number"
+                    ? perfectRate <= 30
+                      ? "#ef4444"
+                      : perfectRate <= 60
+                        ? "#f59e0b"
+                        : "#22c55e"
+                    : undefined
+                }
               />
               <StatGauge
                 value={typeof outcomeRate === "number" ? String(Math.round(outcomeRate)) : "-"}
                 label="勝敗的中率"
                 unit="%"
                 progress={typeof outcomeRate === "number" ? outcomeRate / 100 : 0}
+                accentColor={
+                  typeof outcomeRate === "number"
+                    ? outcomeRate <= 30
+                      ? "#ef4444"
+                      : outcomeRate <= 60
+                        ? "#f59e0b"
+                        : "#22c55e"
+                    : undefined
+                }
               />
               <StatGauge
                 value={typeof predictionCount === "number" ? String(predictionCount) : "-"}
                 label="予想試合数"
                 progress={typeof predictionCount === "number" ? predictionCount / 104 : 0}
+                accentColor={
+                  typeof predictionCount === "number"
+                    ? predictionCount <= 20
+                      ? "#3b82f6"
+                      : predictionCount <= 70
+                        ? "#b45309"
+                        : "#f59e0b"
+                    : undefined
+                }
               />
             </div>
           </div>
@@ -77,7 +104,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ uid: str
           <div
             style={{
               width: "100%",
-              background: "rgba(255,255,255,0.98)",
+              background: "rgba(255, 251, 235, 0.98)",
               borderRadius: 22,
               padding: 18,
               display: "grid",

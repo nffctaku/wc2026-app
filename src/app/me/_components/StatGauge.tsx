@@ -2,9 +2,17 @@
 
 import React from "react";
 
-export default function StatGauge(props: { value: string; label: string; progress: number; unit?: string }) {
+export default function StatGauge(props: {
+  value: string;
+  label: string;
+  progress: number;
+  unit?: string;
+  accentColor?: string;
+}) {
   let progress = Math.max(0, Math.min(1, props.progress));
   progress = Math.max(0.08, Math.min(0.98, progress));
+
+  const accent = props.accentColor ?? "#3b82f6";
 
   const round = (n: number) => Number(n.toFixed(6));
 
@@ -44,7 +52,7 @@ export default function StatGauge(props: { value: string; label: string; progres
               <path
                 key={i}
                 d={arcPath(start, end)}
-                stroke={isFilled ? "#3b82f6" : "rgba(0,0,0,0.10)"}
+                stroke={isFilled ? accent : "rgba(0,0,0,0.10)"}
                 strokeWidth={stroke}
                 fill="none"
                 strokeLinecap="butt"
@@ -57,7 +65,7 @@ export default function StatGauge(props: { value: string; label: string; progres
           <div style={{ display: "grid", gap: 4, placeItems: "center" }}>
             <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(0,0,0,0.45)", letterSpacing: 0.2 }}>{props.label}</div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-              <div style={{ fontWeight: 900, fontSize: 30, lineHeight: "30px", color: "#3b82f6" }}>{props.value}</div>
+              <div style={{ fontWeight: 900, fontSize: 30, lineHeight: "30px", color: accent }}>{props.value}</div>
               {props.unit ? <div style={{ fontWeight: 900, fontSize: 12, color: "rgba(0,0,0,0.55)" }}>{props.unit}</div> : null}
             </div>
           </div>

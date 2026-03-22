@@ -6,8 +6,10 @@ export default function RankingGauge(props: { points: number | null; rank: numbe
   const p = typeof props.points === "number" ? props.points : null;
   const r = typeof props.rank === "number" ? props.rank : null;
   const maxPoints = 6540;
-  let progress = p != null ? p / maxPoints : 0;
-  progress = Math.max(0, Math.min(1, progress));
+  const rawProgress = p != null ? p / maxPoints : 0;
+  let progress = Math.max(0, Math.min(1, rawProgress));
+
+  const filledColor = "#3b82f6";
 
   const round = (n: number) => Number(n.toFixed(6));
 
@@ -47,7 +49,7 @@ export default function RankingGauge(props: { points: number | null; rank: numbe
               <path
                 key={i}
                 d={arcPath(start, end)}
-                stroke={isFilled ? "#3b82f6" : "rgba(0,0,0,0.10)"}
+                stroke={isFilled ? filledColor : "rgba(0,0,0,0.10)"}
                 strokeWidth={stroke}
                 fill="none"
                 strokeLinecap="butt"
