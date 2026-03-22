@@ -94,8 +94,43 @@ export default function MePage() {
   }, [teams, userDoc?.championTeamId]);
 
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
+    <div
+      className={styles.page}
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#040913",
+        backgroundImage: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
+        position: "relative",
+        ["--background" as any]: "transparent",
+        ["--foreground" as any]: "transparent",
+        ["--text-primary" as any]: "rgba(255,255,255,0.96)",
+        ["--text-secondary" as any]: "rgba(255,255,255,0.72)",
+        ["--button-secondary-border" as any]: "rgba(255,255,255,0.18)",
+        ["--button-secondary-hover" as any]: "rgba(255,255,255,0.10)",
+        ["--button-primary-hover" as any]: "rgba(255,255,255,0.86)",
+      }}
+    >
+      <div className={`${styles.bgLayer} ${styles.bg1}`} />
+      <div className={`${styles.bgLayer} ${styles.bg2}`} />
+      <div className={`${styles.bgLayer} ${styles.bg3}`} />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(0,0,0,0.38)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <main className={styles.main} style={{ position: "relative", backgroundColor: "transparent", paddingTop: 36, paddingBottom: 36 }}>
         <div style={{ width: "100%", display: "grid", gap: 14 }}>
           <div
             style={{
