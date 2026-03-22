@@ -58,11 +58,13 @@ export async function generateMetadata({ params }: { params: Promise<{ uid: stri
       title,
       description,
       type: "website",
+      images: ["/OGP.png"],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
+      images: ["/OGP.png"],
     },
   };
 }

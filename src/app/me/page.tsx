@@ -15,6 +15,7 @@ import useProfileStats from "@/app/me/_lib/useProfileStats";
 export default function MePage() {
   const [user, setUser] = useState(() => auth.currentUser);
   const [error, setError] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   const uid = user?.uid ?? null;
   const { error: statsError, userDoc, teams, totalPoints, ranking, totalUsers, predictionCount, perfectRate, outcomeRate } =
@@ -46,6 +47,33 @@ export default function MePage() {
       await signOut();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function onClickShare() {
+    setShareStatus(null);
+    try {
+      if (!uid) return;
+      const url = `${window.location.origin}/users/${uid}`;
+      const title = `${userDoc?.nickname?.trim() || "WC2026"} | WC2026`;
+      const text = `RANK ${ranking != null ? ranking.toLocaleString("ja-JP") : "-"} / ${
+        totalPoints != null ? totalPoints.toLocaleString("ja-JP") : "-"
+      } Pts`;
+
+      if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function") {
+        await navigator.share({ title, text, url });
+        return;
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setShareStatus("URLをコピーしました");
+        return;
+      }
+
+      setShareStatus("この環境では共有できません");
+    } catch {
+      setShareStatus("共有に失敗しました");
     }
   }
 
@@ -181,18 +209,34 @@ export default function MePage() {
           </div>
 
           {uid ? (
-            <Link
-              href="/me/edit"
-              style={{
-                marginTop: 4,
-                textAlign: "center",
-                fontWeight: 900,
-                color: "rgba(0,0,0,0.65)",
-                textDecoration: "none",
-              }}
-            >
-              プロフィール編集
-            </Link>
+            <div style={{ display: "grid", gap: 8, marginTop: 4 }}>
+              <button
+                type="button"
+                onClick={onClickShare}
+                style={{
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  background: "#fff",
+                  borderRadius: 999,
+                  padding: "10px 12px",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                シェア
+              </button>
+              {shareStatus ? <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.55)", textAlign: "center" }}>{shareStatus}</div> : null}
+              <Link
+                href="/me/edit"
+                style={{
+                  textAlign: "center",
+                  fontWeight: 900,
+                  color: "rgba(0,0,0,0.65)",
+                  textDecoration: "none",
+                }}
+              >
+                プロフィール編集
+              </Link>
+            </div>
           ) : null}
         </div>
       </main>

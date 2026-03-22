@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { use, useMemo } from "react";
 
 import styles from "../../page.module.css";
 
@@ -9,8 +9,8 @@ import RankingGauge from "@/app/me/_components/RankingGauge";
 import StatGauge from "@/app/me/_components/StatGauge";
 import useProfileStats from "@/app/me/_lib/useProfileStats";
 
-export default function UserProfilePage({ params }: { params: { uid: string } }) {
-  const uid = params.uid;
+export default function UserProfilePage({ params }: { params: Promise<{ uid: string }> }) {
+  const { uid } = use(params);
 
   const { busy, error, userDoc, teams, totalPoints, ranking, totalUsers, predictionCount, perfectRate, outcomeRate } = useProfileStats(uid, {
     subscribeUserDoc: false,
