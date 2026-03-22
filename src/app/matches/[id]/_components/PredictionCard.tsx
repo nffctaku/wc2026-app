@@ -29,17 +29,21 @@ export default function PredictionCard({
   onAwayScoreChange: (value: string) => void;
   onSavePrediction: () => void;
 }) {
+  const textPrimary = "rgba(255,255,255,0.92)";
+  const textMuted = "rgba(255,255,255,0.72)";
   return (
     <section style={{ padding: 4 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ fontWeight: 900 }}>スコア予想</div>
-        <div style={{ fontSize: 12, color: "rgba(0,0,0,0.60)", fontWeight: 700 }}>{lockedLabel}</div>
+        <div style={{ fontWeight: 900, color: textPrimary }}>スコア予想</div>
+        <div style={{ fontSize: 12, color: textMuted, fontWeight: 800 }}>{lockedLabel}</div>
       </div>
 
-      {!uid ? <div style={{ marginTop: 8, fontSize: 13 }}>予想の入力にはログインが必要です</div> : null}
-      {predError ? <pre style={{ color: "#b00020", margin: "8px 0 0" }}>{predError}</pre> : null}
-      {predSaved ? <pre style={{ color: "#1b5e20", margin: "8px 0 0" }}>{predSaved}</pre> : null}
-      {predBusy ? <div style={{ marginTop: 8, fontSize: 13 }}>予想を読込/保存中...</div> : null}
+      {!uid ? (
+        <div style={{ marginTop: 8, fontSize: 13, color: textMuted }}>予想の入力にはログインが必要です</div>
+      ) : null}
+      {predError ? <pre style={{ color: "#ffb4b4", margin: "8px 0 0" }}>{predError}</pre> : null}
+      {predSaved ? <pre style={{ color: "rgba(255,255,255,0.90)", margin: "8px 0 0" }}>{predSaved}</pre> : null}
+      {predBusy ? <div style={{ marginTop: 8, fontSize: 13, color: textMuted }}>予想を読込/保存中...</div> : null}
 
       <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 8, alignItems: "end" }}>
         <label style={{ display: "grid", gap: 6, minWidth: 0 }}>
@@ -77,8 +81,12 @@ export default function PredictionCard({
             padding: "10px 14px",
             borderRadius: 10,
             border: "0",
-            background: canEditPrediction && !predBusy ? "#f39c33" : "#c9c9c9",
-            color: "#fff",
+            background:
+              canEditPrediction && !predBusy
+                ? "linear-gradient(180deg, #ff9a1f 0%, #f97316 100%)"
+                : "rgba(255,255,255,0.22)",
+            boxShadow: canEditPrediction && !predBusy ? "0 16px 28px rgba(249, 115, 22, 0.28)" : "none",
+            color: "rgba(255,255,255,0.96)",
             fontWeight: 900,
             cursor: canEditPrediction && !predBusy ? "pointer" : "not-allowed",
           }}

@@ -67,7 +67,7 @@ export default function TournamentPredictionsView(props: {
 
   const cardStyle: React.CSSProperties = {
     width: "100%",
-    background: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(250,250,252,0.98) 100%)",
+    background: "linear-gradient(180deg, rgba(239,246,255,0.96) 0%, rgba(248,250,252,0.96) 100%)",
     borderRadius: 18,
     padding: 16,
     display: "grid",
@@ -450,16 +450,16 @@ export default function TournamentPredictionsView(props: {
               style={{
                 padding: 13,
                 borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.38)",
+                border: "1px solid rgba(0,0,0,0.10)",
                 fontWeight: 900,
-                background: "linear-gradient(180deg, rgba(9, 30, 15, 0.92) 0%, rgba(5, 18, 9, 0.92) 100%)",
-                boxShadow: "0 18px 34px rgba(0,0,0,0.26)",
-                color: "#ff8a00",
+                background: "linear-gradient(180deg, #ff9a1f 0%, #f97316 100%)",
+                boxShadow: "0 18px 34px rgba(249, 115, 22, 0.28)",
+                color: "rgba(255,255,255,0.96)",
                 textAlign: "center",
                 textDecoration: "none",
               }}
             >
-              各試合への予想へ
+              各試合の予想
             </Link>
 
             {props.showSavedToLabel ? (
