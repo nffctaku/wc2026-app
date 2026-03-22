@@ -34,6 +34,22 @@ import {FieldValue, getFirestore, Timestamp} from "firebase-admin/firestore";
 
 initializeApp();
 
+type UserRole = "USER" | "ADMIN";
+
+type UserDoc = {
+  idNo?: number;
+  nickname?: string;
+  photoURL?: string | null;
+  role?: UserRole;
+};
+
+type PublicUserDoc = {
+  idNo: number | null;
+  nickname: string;
+  photoURL: string | null;
+  updatedAt: Timestamp;
+};
+
 type PredictionDoc = {
   uid: string;
   matchId: string;
@@ -126,6 +142,67 @@ export const onPredictionWritten = functionsV1
       after: afterOut,
     });
   });
+
+export const onUserWritten = functionsV1
+  .region("us-central1")
+  .firestore.document("users/{uid}")
+  .onWrite(async (change: functionsV1.Change<functionsV1.firestore.DocumentSnapshot>, context) => {
+    const uid = context.params.uid as string;
+    if (!uid) return;
+
+    if (!change.after.exists) {
+      await getFirestore().doc(`publicUsers/${uid}`).delete().catch(() => undefined);
+      return;
+    }
+
+    const after = change.after.data() as UserDoc;
+    const payload: PublicUserDoc = {
+      idNo: typeof after.idNo === "number" ? after.idNo : null,
+      nickname: typeof after.nickname === "string" ? after.nickname : "",
+      photoURL: typeof after.photoURL === "string" ? after.photoURL : null,
+      updatedAt: Timestamp.now(),
+    };
+
+    await getFirestore().doc(`publicUsers/${uid}`).set(payload, {merge: true});
+  });
+
+export const backfillPublicUsers = onCall(async (req) => {
+  try {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required");
+
+    const db = getFirestore();
+    const roleSnap = await db.doc(`users/${uid}`).get();
+    const role = (roleSnap.data() as UserDoc | undefined)?.role ?? "USER";
+    if (role !== "ADMIN") throw new HttpsError("permission-denied", "ADMIN required");
+
+    const usersSnap = await db.collection("users").get();
+    const writer = db.bulkWriter();
+    let updated = 0;
+
+    logger.info("backfillPublicUsers start", {requestedBy: uid, totalUsers: usersSnap.size});
+
+    for (const d of usersSnap.docs) {
+      const u = d.data() as UserDoc;
+      const payload: PublicUserDoc = {
+        idNo: typeof u.idNo === "number" ? u.idNo : null,
+        nickname: typeof u.nickname === "string" ? u.nickname : "",
+        photoURL: typeof u.photoURL === "string" ? u.photoURL : null,
+        updatedAt: Timestamp.now(),
+      };
+      writer.set(db.doc(`publicUsers/${d.id}`), payload, {merge: true});
+      updated += 1;
+    }
+
+    await writer.close();
+    logger.info("backfillPublicUsers done", {updated});
+    return {updated};
+  } catch (e) {
+    logger.error("backfillPublicUsers failed", e);
+    if (e instanceof HttpsError) throw e;
+    throw new HttpsError("internal", e instanceof Error ? e.message : String(e));
+  }
+});
 
 export const onMatchWritten = functionsV1
   .region("us-central1")

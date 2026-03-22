@@ -9,7 +9,6 @@ import { db } from "@/lib/firebase/client";
 type UserDoc = {
   idNo?: number;
   nickname?: string;
-  email?: string;
   photoURL?: string | null;
 };
 
@@ -53,7 +52,7 @@ export default function RankingPage() {
       setBusy(true);
       setError(null);
       try {
-        const usersSnap = await getDocs(collection(db, "users"));
+        const usersSnap = await getDocs(collection(db, "publicUsers"));
         const userMap = new Map<string, UserDoc>();
         for (const d of usersSnap.docs) {
           userMap.set(d.id, d.data() as UserDoc);
