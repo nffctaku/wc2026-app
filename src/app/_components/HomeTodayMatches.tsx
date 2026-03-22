@@ -21,6 +21,7 @@ type MatchRow = MatchDoc & { id: string };
 
 type TeamLite = {
   nameJa: string;
+  code?: string;
   flagUrl?: string;
 };
 
@@ -33,6 +34,13 @@ function formatKickoff(ts: Timestamp): string {
 
 function teamName(t: TeamLite | null, fallbackId: string): string {
   return t?.nameJa ?? fallbackId;
+}
+
+function flagSrc(t: TeamLite | null): string | null {
+  if (!t) return null;
+  const code = typeof t.code === "string" ? t.code.trim().toUpperCase() : "";
+  if (!code) return null;
+  return `/国旗/${code}.png`;
 }
 
 export default function HomeTodayMatches(props: { max?: number }) {
@@ -100,7 +108,11 @@ export default function HomeTodayMatches(props: { max?: number }) {
           if (!s.exists()) continue;
           const t = s.data() as TeamDoc;
           if (typeof t.nameJa !== "string") continue;
-          map.set(id, { nameJa: t.nameJa, flagUrl: typeof t.flagUrl === "string" ? t.flagUrl : undefined });
+          map.set(id, {
+            nameJa: t.nameJa,
+            code: typeof t.code === "string" ? t.code.trim().toUpperCase() : undefined,
+            flagUrl: typeof t.flagUrl === "string" ? t.flagUrl : undefined,
+          });
         }
         setTeams(map);
       } catch (e) {
@@ -135,6 +147,8 @@ export default function HomeTodayMatches(props: { max?: number }) {
         {rows.map((m) => {
           const home = teams.get(m.homeTeamId) ?? null;
           const away = teams.get(m.awayTeamId) ?? null;
+          const homeFlag = flagSrc(home);
+          const awayFlag = flagSrc(away);
           const hasScore = m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number";
 
           return (
@@ -156,11 +170,11 @@ export default function HomeTodayMatches(props: { max?: number }) {
             >
               <div style={{ fontWeight: 900, fontSize: 12, color: "rgba(0,0,0,0.60)" }}>{formatKickoff(m.kickoffAt)}</div>
 
-              <div style={{ minWidth: 0, display: "grid", gap: 4 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                  {home?.flagUrl ? (
+              <div style={{ minWidth: 0, display: "grid" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, padding: "2px 0" }}>
+                  {homeFlag ? (
                     <img
-                      src={home.flagUrl}
+                      src={homeFlag}
                       alt=""
                       width={18}
                       height={12}
@@ -175,10 +189,22 @@ export default function HomeTodayMatches(props: { max?: number }) {
                     {teamName(home, m.homeTeamId)}
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                  {away?.flagUrl ? (
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    minWidth: 0,
+                    padding: "2px 0",
+                    borderTop: "1px solid rgba(0,0,0,0.08)",
+                    marginTop: 4,
+                    paddingTop: 6,
+                  }}
+                >
+                  {awayFlag ? (
                     <img
-                      src={away.flagUrl}
+                      src={awayFlag}
                       alt=""
                       width={18}
                       height={12}
@@ -195,7 +221,7 @@ export default function HomeTodayMatches(props: { max?: number }) {
                 </div>
               </div>
 
-              <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+              <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums", alignSelf: "center" }}>
                 {hasScore ? (
                   <div style={{ fontWeight: 900 }}>{m.homeScore}-{m.awayScore}</div>
                 ) : (

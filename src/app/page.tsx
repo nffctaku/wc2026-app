@@ -15,6 +15,10 @@ export default function Home() {
       style={{
         minHeight: "100vh",
         background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
+        backgroundImage: "url('/50.png')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
         position: "relative",
         ["--background" as any]: "transparent",
         ["--foreground" as any]: "transparent",
@@ -29,12 +33,23 @@ export default function Home() {
         style={{
           position: "absolute",
           inset: 0,
+          background: "rgba(0,0,0,0.38)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
           background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
           pointerEvents: "none",
         }}
       />
       <main className={styles.main} style={{ position: "relative", backgroundColor: "transparent", paddingTop: 36, paddingBottom: 36 }}>
         <div style={{ width: "100%", display: "grid", gap: 18 }}>
+          <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: 0.2, color: "rgba(255,255,255,0.96)" }}>
+            FIFA World Cup 2026
+          </div>
           <HomeCountdown kickoffIso={kickoffIso} />
           <HomeTodayMatches max={6} />
           <HomeTopRanking limit={10} />

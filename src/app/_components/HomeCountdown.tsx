@@ -31,14 +31,50 @@ function calcCountdown(targetMs: number, nowMs: number): Countdown {
 export default function HomeCountdown(props: { kickoffIso: string }) {
   const kickoff = useMemo(() => new Date(props.kickoffIso), [props.kickoffIso]);
 
-  const [countdown, setCountdown] = useState<Countdown>(() => calcCountdown(kickoff.getTime(), Date.now()));
+  const [countdown, setCountdown] = useState<Countdown | null>(null);
 
   useEffect(() => {
+    setCountdown(calcCountdown(kickoff.getTime(), Date.now()));
     const id = window.setInterval(() => {
       setCountdown(calcCountdown(kickoff.getTime(), Date.now()));
     }, 1000);
     return () => window.clearInterval(id);
   }, [kickoff]);
+
+  if (!countdown) {
+    const PlaceholderUnit = (p: { label: string }) => {
+      const size = 72;
+      const stroke = 6;
+      const r = (size - stroke) / 2;
+      return (
+        <div style={{ display: "grid", justifyItems: "center", gap: 6 }}>
+          <div style={{ position: "relative", width: size, height: size }}>
+            <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: "block" }} aria-hidden="true">
+              <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(16, 185, 129, 0.20)" strokeWidth={stroke} fill="none" />
+            </svg>
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+              <div style={{ fontWeight: 900, fontSize: 22, lineHeight: "22px", color: "rgba(16, 185, 129, 0.95)", fontVariantNumeric: "tabular-nums" }}>
+                --
+              </div>
+            </div>
+          </div>
+          <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(16, 185, 129, 0.80)", letterSpacing: 0.2 }}>{p.label}</div>
+        </div>
+      );
+    };
+
+    return (
+      <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>あと</div>
+        <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+          <PlaceholderUnit label="Days" />
+          <PlaceholderUnit label="Hours" />
+          <PlaceholderUnit label="Minutes" />
+          <PlaceholderUnit label="Seconds" />
+        </div>
+      </div>
+    );
+  }
 
   if (countdown.done) {
     return <p style={{ margin: 0, fontSize: 20, fontWeight: 700 }}>開幕！</p>;
@@ -97,7 +133,7 @@ export default function HomeCountdown(props: { kickoffIso: string }) {
 
   return (
     <div style={{ display: "grid", gap: 10 }}>
-      <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.65)" }}>あと</div>
+      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.72)" }}>あと</div>
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
         <CircleUnit value={daysText} label="Days" progress={daysProgress} />
         <CircleUnit value={hoursText} label="Hours" progress={hoursProgress} />
