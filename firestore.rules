@@ -51,9 +51,7 @@ service cloud.firestore {
     }
 
     match /predictions/{predId} {
-      allow read: if signedIn() && (
-        resource.data.uid == request.auth.uid || isAdmin()
-      );
+      allow read: if signedIn();
 
       allow create: if signedIn() &&
         request.resource.data.uid == request.auth.uid &&

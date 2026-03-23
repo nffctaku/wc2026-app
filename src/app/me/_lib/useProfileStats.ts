@@ -28,7 +28,8 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
 
   const userDocRef = useMemo(() => {
     if (!uid) return null;
-    return doc(db, "users", uid);
+    if (subscribeUserDoc) return doc(db, "users", uid);
+    return doc(db, "publicUsers", uid);
   }, [uid]);
 
   useEffect(() => {
