@@ -22,7 +22,7 @@ function absoluteUrl(pathname: string): string {
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
   const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
-  return `${base}${p}`;
+  return `${base}${encodeURI(p)}`;
 }
 
 function formatKickoff(ts: Timestamp): string {
