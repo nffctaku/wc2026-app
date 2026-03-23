@@ -131,7 +131,7 @@ export default function HomeTodayMatches(props: { max?: number }) {
     <div style={{ display: "grid", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
         <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.96)" }}>{title}</div>
-        <Link href="/matches" style={{ fontWeight: 900, fontSize: 12, color: "rgba(255,255,255,0.80)", textDecoration: "none" }}>
+        <Link href="/results" style={{ fontWeight: 900, fontSize: 12, color: "rgba(255,255,255,0.80)", textDecoration: "none" }}>
           もっと見る
         </Link>
       </div>
