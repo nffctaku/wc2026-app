@@ -112,7 +112,15 @@ export default function useProfileStats(uid: string | null, opts?: { subscribeUs
 
         try {
           const allStatsSnap = await getDocs(query(collection(db, "userStats"), orderBy("totalPoints", "desc")));
-          setTotalUsers(allStatsSnap.docs.length);
+          let userCount: number | null = null;
+          try {
+            const publicUsersSnap = await getDocs(collection(db, "publicUsers"));
+            userCount = publicUsersSnap.docs.length;
+          } catch {
+            userCount = null;
+          }
+
+          setTotalUsers(typeof userCount === "number" ? userCount : allStatsSnap.docs.length);
           let found: number | null = null;
           for (let i = 0; i < allStatsSnap.docs.length; i++) {
             const d = allStatsSnap.docs[i]!;
