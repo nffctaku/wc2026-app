@@ -17,6 +17,14 @@ import type { MatchDoc, TeamDoc } from "@/lib/fifa/normalize";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function absoluteUrl(pathname: string): string {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return `${base}${p}`;
+}
+
 function formatKickoff(ts: Timestamp): string {
   const d = ts.toDate();
   return d.toLocaleString("ja-JP", {
@@ -67,6 +75,8 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
   const homeName = home?.nameJa?.trim() || match?.homeTeamId || "HOME";
   const awayName = away?.nameJa?.trim() || match?.awayTeamId || "AWAY";
+  const homeFlagSrc = home?.code?.trim() ? absoluteUrl(`/国旗/${home.code.trim().toUpperCase()}.png`) : null;
+  const awayFlagSrc = away?.code?.trim() ? absoluteUrl(`/国旗/${away.code.trim().toUpperCase()}.png`) : null;
   const stage = match?.stageNameJa?.trim() || "MATCH";
   const group = match?.groupNameJa?.trim();
   const stageLabel = group ? `${stage} / ${group}` : stage;
@@ -95,14 +105,32 @@ export default async function Image({ params }: { params: Promise<{ id: string }
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18, alignItems: "center" }}>
           <div style={{ fontSize: 30, fontWeight: 900, opacity: 0.92 }}>{stageLabel}</div>
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <div style={{ fontSize: 64, fontWeight: 900, textAlign: "right", maxWidth: 520, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+            {homeFlagSrc ? (
+              <img
+                src={homeFlagSrc}
+                alt=""
+                width={96}
+                height={64}
+                style={{ width: 96, height: 64, objectFit: "cover", borderRadius: 10 }}
+              />
+            ) : null}
+            <div style={{ fontSize: 64, fontWeight: 900, textAlign: "right", maxWidth: 440, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {homeName}
             </div>
             <div style={{ fontSize: 44, fontWeight: 900, opacity: 0.9 }}>vs</div>
-            <div style={{ fontSize: 64, fontWeight: 900, textAlign: "left", maxWidth: 520, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 64, fontWeight: 900, textAlign: "left", maxWidth: 440, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {awayName}
             </div>
+            {awayFlagSrc ? (
+              <img
+                src={awayFlagSrc}
+                alt=""
+                width={96}
+                height={64}
+                style={{ width: 96, height: 64, objectFit: "cover", borderRadius: 10 }}
+              />
+            ) : null}
           </div>
           {kickoffLabel ? (
             <div style={{ fontSize: 28, fontWeight: 800, opacity: 0.85 }}>{kickoffLabel}</div>
