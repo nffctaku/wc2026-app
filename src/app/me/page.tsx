@@ -70,18 +70,10 @@ export default function MePage() {
         totalPoints != null ? totalPoints.toLocaleString("ja-JP") : "-"
       } Pts`;
 
-      if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function") {
-        await navigator.share({ title, text, url });
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(url);
-        setShareStatus("URLをコピーしました");
-        return;
-      }
-
-      setShareStatus("この環境では共有できません");
+      const tweetText = `${title}\n${text}`.trim();
+      const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(url)}`;
+      window.open(intentUrl, "_blank", "noopener,noreferrer");
+      setShareStatus("Xの投稿画面を開きました");
     } catch {
       setShareStatus("共有に失敗しました");
     }
@@ -353,7 +345,7 @@ export default function MePage() {
                   cursor: "pointer",
                 }}
               >
-                シェア
+                Xでシェア
               </button>
               {shareStatus ? <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.55)", textAlign: "center" }}>{shareStatus}</div> : null}
               <Link

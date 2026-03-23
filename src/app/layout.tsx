@@ -17,6 +17,16 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "WC2026",
   description: "WC2026",
+  openGraph: {
+    title: "WC2026",
+    description: "WC2026",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "WC2026",
+    description: "WC2026",
+  },
 };
 
 export default function RootLayout({

@@ -399,22 +399,11 @@ export default function MatchDetailPage() {
     try {
       if (!match) return;
       const url = typeof window !== "undefined" ? window.location.href : "";
-      const title = "予想をシェア | WC2026";
       const scoreLabel = `${homeScore}-${awayScore}`;
-      const text = `${homeName} ${scoreLabel} ${awayName}`;
-
-      if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function") {
-        await navigator.share({ title, text, url });
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(`${text}\n${url}`.trim());
-        setShareStatus("予想をコピーしました");
-        return;
-      }
-
-      setShareStatus("この環境では共有できません");
+      const text = `${homeName} ${scoreLabel} ${awayName}\n#WC2026`;
+      const intentUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+      window.open(intentUrl, "_blank", "noopener,noreferrer");
+      setShareStatus("Xの投稿画面を開きました");
     } catch {
       setShareStatus("共有に失敗しました");
     }

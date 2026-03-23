@@ -253,7 +253,7 @@ export default function MatchHero({
                   opacity: !uid ? 0.55 : 1,
                 }}
               >
-                予想をシェア
+                Xでシェア
               </button>
               {shareStatus ? <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.78)", textAlign: "center" }}>{shareStatus}</div> : null}
             </div>
