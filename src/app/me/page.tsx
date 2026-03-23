@@ -93,6 +93,14 @@ export default function MePage() {
     return teams.get(id)?.nameJa ?? null;
   }, [teams, userDoc?.championTeamId]);
 
+  const championFlagSrc = useMemo(() => {
+    const id = userDoc?.championTeamId;
+    if (!id) return null;
+    const code = teams.get(id)?.code?.trim()?.toUpperCase();
+    if (!code) return null;
+    return `/国旗/${code}.png`;
+  }, [teams, userDoc?.championTeamId]);
+
   return (
     <div
       className={styles.page}
@@ -314,7 +322,18 @@ export default function MePage() {
 
             <div style={{ display: "grid", gap: 6 }}>
               <div style={{ fontWeight: 900 }}>優勝チーム予想</div>
-              <div style={{ color: "rgba(0,0,0,0.65)", fontWeight: 700 }}>{championName ?? "未設定"}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(0,0,0,0.65)", fontWeight: 700 }}>
+                {championFlagSrc ? (
+                  <img
+                    src={championFlagSrc}
+                    alt=""
+                    width={22}
+                    height={14}
+                    style={{ display: "block", borderRadius: 3, boxShadow: "0 1px 3px rgba(0,0,0,0.18)" }}
+                  />
+                ) : null}
+                <span>{championName ?? "未設定"}</span>
+              </div>
             </div>
 
             {displayError ? <p style={{ color: "#b00020", whiteSpace: "pre-wrap" }}>{displayError}</p> : null}
@@ -342,8 +361,12 @@ export default function MePage() {
                 style={{
                   textAlign: "center",
                   fontWeight: 900,
-                  color: "rgba(0,0,0,0.65)",
+                  color: "rgba(0,0,0,0.78)",
                   textDecoration: "none",
+                  border: "1px solid rgba(0,0,0,0.12)",
+                  background: "rgba(255,255,255,0.92)",
+                  borderRadius: 999,
+                  padding: "10px 12px",
                 }}
               >
                 プロフィール編集

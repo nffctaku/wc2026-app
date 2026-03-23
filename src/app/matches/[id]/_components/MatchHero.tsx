@@ -43,6 +43,9 @@ export default function MatchHero({
   onHomeScoreChange,
   onAwayScoreChange,
 
+  onSharePrediction,
+  shareStatus,
+
   relatedGroupMatches,
 }: {
   match: MatchDoc;
@@ -67,6 +70,9 @@ export default function MatchHero({
   awayScore: number;
   onHomeScoreChange: (value: number) => void;
   onAwayScoreChange: (value: number) => void;
+
+  onSharePrediction: () => void | Promise<void>;
+  shareStatus: string | null;
 
   relatedGroupMatches?: RelatedMatchCard[];
 }) {
@@ -229,6 +235,27 @@ export default function MatchHero({
                   side="right"
                 />
               </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 6, paddingTop: 6 }}>
+              <button
+                type="button"
+                onClick={onSharePrediction}
+                disabled={!uid}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.18)",
+                  background: "rgba(255,255,255,0.10)",
+                  color: "rgba(255,255,255,0.92)",
+                  borderRadius: 999,
+                  padding: "10px 12px",
+                  fontWeight: 900,
+                  cursor: !uid ? "not-allowed" : "pointer",
+                  opacity: !uid ? 0.55 : 1,
+                }}
+              >
+                予想をシェア
+              </button>
+              {shareStatus ? <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.78)", textAlign: "center" }}>{shareStatus}</div> : null}
             </div>
           </div>
 

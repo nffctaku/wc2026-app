@@ -59,6 +59,7 @@ export default function MatchDetailPage() {
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
+  const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   const [relatedGroupMatches, setRelatedGroupMatches] = useState<RelatedMatchCard[]>([]);
 
@@ -393,6 +394,32 @@ export default function MatchDetailPage() {
   const homeFlag = useMemo(() => localFlagSrc(home), [home]);
   const awayFlag = useMemo(() => localFlagSrc(away), [away]);
 
+  async function onSharePrediction() {
+    setShareStatus(null);
+    try {
+      if (!match) return;
+      const url = typeof window !== "undefined" ? window.location.href : "";
+      const title = "予想をシェア | WC2026";
+      const scoreLabel = `${homeScore}-${awayScore}`;
+      const text = `${homeName} ${scoreLabel} ${awayName}`;
+
+      if (typeof navigator !== "undefined" && "share" in navigator && typeof navigator.share === "function") {
+        await navigator.share({ title, text, url });
+        return;
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${text}\n${url}`.trim());
+        setShareStatus("予想をコピーしました");
+        return;
+      }
+
+      setShareStatus("この環境では共有できません");
+    } catch {
+      setShareStatus("共有に失敗しました");
+    }
+  }
+
   return (
     <div style={{ display: "grid", gap: 12, minHeight: "100vh" }}>
       {busy ? (
@@ -427,6 +454,9 @@ export default function MatchDetailPage() {
             awayScore={awayScore}
             onHomeScoreChange={setHomeScore}
             onAwayScoreChange={setAwayScore}
+
+            onSharePrediction={onSharePrediction}
+            shareStatus={shareStatus}
 
             relatedGroupMatches={relatedGroupMatches}
           />
