@@ -97,7 +97,7 @@ export default function MatchHero({
 
       <div style={{ position: "relative", padding: 16, display: "grid", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href="/matches" style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 800 }}>
+          <Link href="/results" style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 800 }}>
             ←
           </Link>
           <div
