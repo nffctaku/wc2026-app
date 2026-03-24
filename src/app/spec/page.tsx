@@ -17,7 +17,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>目的</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.7" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.7" }}>
               FIFA World Cup 2026 を題材に、試合スコア予想・ランキング・大会予想を行うサイト。
               ユーザーは Google ログイン後に予想を保存でき、結果に応じてポイントが集計されます。
             </div>
@@ -25,7 +25,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>ページ構成（主要）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>/</span>：背景スライド + OPENING MATCH カウントダウン + 1日目の試合 + TOP10ランキング
               </div>
@@ -61,7 +61,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>UI/レイアウト方針</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>ヘッダー</span>：モバイルはハンバーガー + ドロワー、PCはヘッダー右にメニューを横並び表示
               </div>
@@ -76,7 +76,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>認証</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>ログイン</span>：Firebase Auth（Google）
               </div>
@@ -88,7 +88,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>技術スタック（エンジニア共有用）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>フロントエンド</span>
               </div>
@@ -171,7 +171,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>Firestore（概略）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>users/{"{"}uid{"}"}</span>：本人用プロフィール（読み取りは本人/管理者）
               </div>
@@ -201,7 +201,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>ポイント集計（スコアリング）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>集計のタイミング</span>：`matches/{"{"}matchId{"}"}` が更新され、試合が `FINISHED` になった（またはスコアが更新された）タイミングで Cloud Functions がポイントを更新
               </div>
@@ -241,7 +241,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>運営（管理）ページ</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>前提</span>：Firestore の `users/{"{"}uid{"}"}.role` が `ADMIN` のユーザーのみ利用可能
               </div>
@@ -283,7 +283,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>マイページ（/me）設計</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>目的</span>：ユーザー本人の現在成績（ランキング/ポイント/精度）をひと目で把握でき、プロフィールの共有・編集導線を提供
               </div>
@@ -315,7 +315,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>グラフ設計（RankingGauge）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>表示内容</span>：`RANK {"{"}rank{"}"} / {"{"}total{"}"}` と `Pts`（総合ポイント）
               </div>
@@ -341,7 +341,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>グラフ設計（StatGauge：完全的中率 / 勝敗的中率 / 予想試合数）</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>共通（見た目）</span>：円形セグメント（36分割）で進捗を表示、`accentColor` は値に応じて変化
               </div>
@@ -392,7 +392,7 @@ export default function SpecPage() {
 
           <div style={{ display: "grid", gap: 10 }}>
             <div style={{ fontWeight: 900, fontSize: 16 }}>設計メモ</div>
-            <div style={{ color: "rgba(0,0,0,0.70)", lineHeight: "1.9" }}>
+            <div style={{ color: "var(--muted-foreground)", lineHeight: "1.9" }}>
               <div>
                 <span style={{ fontWeight: 900 }}>SSR/CSR</span>：トップのカウントダウンは hydration mismatch 回避のため、初回はプレースホルダーを描画してマウント後に更新
               </div>

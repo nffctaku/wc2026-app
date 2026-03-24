@@ -1,6 +1,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --muted-foreground: rgba(0, 0, 0, 0.7);
 }
 
 html.theme-light {
@@ -10,6 +11,7 @@ html.theme-light {
 html.theme-light {
   --background: #ffffff;
   --foreground: #171717;
+  --muted-foreground: rgba(0, 0, 0, 0.7);
 }
 
 html.theme-dark {
@@ -19,6 +21,7 @@ html.theme-dark {
 html.theme-dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --muted-foreground: rgba(237, 237, 237, 0.78);
 }
 
 .appHeader {
@@ -270,6 +273,7 @@ html.theme-dark {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --muted-foreground: rgba(237, 237, 237, 0.78);
   }
 }
 
