@@ -1,0 +1,250 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+
+import { playoffBlocks, type PlayoffMatch } from "./_lib/playoffMatches";
+import { db } from "@/lib/firebase/client";
+
+type PlayoffMatchResultDoc = {
+  status?: "SCHEDULED" | "FINISHED";
+  homeScore?: number;
+  awayScore?: number;
+};
+
+function flagSrcByTeamName(name: string): string | null {
+  const normalized = name.trim();
+  const codeByName: Record<string, string> = {
+    "イタリア": "ITA",
+    "北アイルランド": "NIR",
+    "ウェールズ": "WAL",
+    "ボスニア・ヘルツェゴビナ": "BIH",
+    "ウクライナ": "UKR",
+    "スウェーデン": "SWE",
+    "ポーランド": "POL",
+    "アルバニア": "ALB",
+    "トルコ": "TUR",
+    "ルーマニア": "ROU",
+    "スロバキア": "SVK",
+    "コソボ": "KOS",
+    "デンマーク": "DEN",
+    "北マケドニア": "MKD",
+    "チェコ": "CZE",
+    "アイルランド共和国": "IRL",
+  };
+
+  const code = codeByName[normalized];
+  if (!code) return null;
+  return `/国旗/${code.toUpperCase()}.png`;
+}
+
+function TeamLine({ name }: { name: string }) {
+  const flagSrc = flagSrcByTeamName(name);
+  return (
+    <div
+      style={{
+        fontSize: 14,
+        fontWeight: 700,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+      }}
+      title={name}
+    >
+      {flagSrc ? (
+        <img
+          src={flagSrc}
+          alt=""
+          width={18}
+          height={12}
+          style={{
+            width: 18,
+            height: 12,
+            objectFit: "cover",
+            borderRadius: 2,
+            flex: "0 0 auto",
+          }}
+          loading="lazy"
+          onError={(e) => {
+            (e.currentTarget as HTMLImageElement).style.display = "none";
+          }}
+        />
+      ) : null}
+      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</span>
+    </div>
+  );
+}
+
+function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMatchResultDoc }) {
+  const finished = result?.status === "FINISHED" && typeof result.homeScore === "number" && typeof result.awayScore === "number";
+  return (
+    <Link
+      href={`/playoff/${encodeURIComponent(match.id)}`}
+      style={{
+        display: "grid",
+        gridTemplateColumns: "88px 1fr 92px",
+        gap: 10,
+        alignItems: "center",
+        padding: "10px 12px",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.14)",
+        background: "rgba(255,255,255,0.06)",
+        color: "inherit",
+        textDecoration: "none",
+      }}
+    >
+      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 900 }}>{match.label}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
+          <TeamLine name={match.home} />
+          <TeamLine name={match.away} />
+        </div>
+        <div
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.62)",
+            marginTop: 4,
+            overflow: "hidden",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+          }}
+        >
+          
+        </div>
+      </div>
+      <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
+        {finished ? (
+          <div style={{ display: "grid", justifyItems: "end", gap: 2 }}>
+            <div style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.96)" }}>
+              {result.homeScore}-{result.awayScore}
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.66)" }}>FT</div>
+          </div>
+        ) : (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "6px 10px",
+              borderRadius: 999,
+              border: "1px solid rgba(255,255,255,0.14)",
+              background: "rgba(255,159,28,0.95)",
+              fontSize: 12,
+              fontWeight: 800,
+              color: "#fff",
+              whiteSpace: "nowrap",
+            }}
+          >
+            予想する
+          </span>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+export default function PlayoffPage() {
+  const [resultsById, setResultsById] = useState<Map<string, PlayoffMatchResultDoc>>(new Map());
+
+  useEffect(() => {
+    async function run() {
+      try {
+        const snap = await getDocs(collection(db, "playoffMatches"));
+        const m = new Map<string, PlayoffMatchResultDoc>();
+        for (const d of snap.docs) {
+          m.set(d.id, d.data() as PlayoffMatchResultDoc);
+        }
+        setResultsById(m);
+      } catch {
+        setResultsById(new Map());
+      }
+    }
+    void run();
+  }, []);
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
+        color: "#fff",
+        position: "relative",
+        padding: 24,
+        display: "grid",
+        alignContent: "start",
+        gap: 12,
+      }}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
+          pointerEvents: "none",
+        }}
+      />
+
+      <div style={{ position: "relative", display: "grid", alignContent: "start", gap: 12 }}>
+        <div style={{ fontWeight: 900, fontSize: 18 }}>プレーオフ</div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <Link
+            href="/playoff/ranking"
+            style={{
+              display: "grid",
+              placeItems: "center",
+              padding: "7px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              color: "inherit",
+              textDecoration: "none",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: 0.2,
+            }}
+          >
+            プレーオフランキング
+          </Link>
+          <Link
+            href="/playoff/me"
+            style={{
+              display: "grid",
+              placeItems: "center",
+              padding: "7px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              color: "inherit",
+              textDecoration: "none",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: 0.2,
+            }}
+          >
+            プレーオフマイページ
+          </Link>
+        </div>
+
+        <div style={{ display: "grid", gap: 14 }}>
+          {playoffBlocks.map((b) => (
+            <section key={b.blockName} style={{ display: "grid", gap: 10 }}>
+              <div style={{ fontWeight: 900, fontSize: 16 }}>{b.blockName}</div>
+              <div style={{ display: "grid", gap: 10 }}>
+                {b.matches.map((m, idx) => (
+                  <MatchCard key={`${b.blockName}_${idx}`} match={m} result={resultsById.get(m.id)} />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

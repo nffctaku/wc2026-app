@@ -57,7 +57,23 @@ type PredictionDoc = {
   awayScore: number;
 };
 
+type PlayoffPredictionDoc = {
+  uid: string;
+  matchId: string;
+  homeScore: number;
+  awayScore: number;
+};
+
 type MatchPredictionStatsDoc = {
+  matchId: string;
+  homeWin: number;
+  draw: number;
+  awayWin: number;
+  total: number;
+  updatedAt: Timestamp;
+};
+
+type PlayoffMatchPredictionStatsDoc = {
   matchId: string;
   homeWin: number;
   draw: number;
@@ -68,6 +84,12 @@ type MatchPredictionStatsDoc = {
 
 type MatchDoc = {
   matchNumber?: number;
+  status?: "SCHEDULED" | "FINISHED";
+  homeScore?: number;
+  awayScore?: number;
+};
+
+type PlayoffMatchDoc = {
   status?: "SCHEDULED" | "FINISHED";
   homeScore?: number;
   awayScore?: number;
@@ -143,6 +165,51 @@ export const onPredictionWritten = functionsV1
     });
   });
 
+export const onPlayoffPredictionWritten = functionsV1
+  .region("us-central1")
+  .firestore.document("playoffPredictions/{predId}")
+  .onWrite(async (change: functionsV1.Change<functionsV1.firestore.DocumentSnapshot>) => {
+    const before =
+      (change.before.exists ? (change.before.data() as PlayoffPredictionDoc) : null) as PlayoffPredictionDoc | null;
+    const after =
+      (change.after.exists ? (change.after.data() as PlayoffPredictionDoc) : null) as PlayoffPredictionDoc | null;
+
+    const matchId = after?.matchId ?? before?.matchId;
+    if (!matchId) return;
+
+    const beforeOut = predOutcome(before);
+    const afterOut = predOutcome(after);
+
+    const db = getFirestore();
+    const ref = db.doc(`playoffMatchPredictionStats/${matchId}`);
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const cur =
+        (snap.exists ? (snap.data() as Partial<PlayoffMatchPredictionStatsDoc>) : {}) as Partial<PlayoffMatchPredictionStatsDoc>;
+
+      const dec = deltaFor(beforeOut, -1);
+      const inc = deltaFor(afterOut, 1);
+
+      const next: PlayoffMatchPredictionStatsDoc = {
+        matchId,
+        homeWin: Math.max(0, (cur.homeWin ?? 0) + dec.homeWin + inc.homeWin),
+        draw: Math.max(0, (cur.draw ?? 0) + dec.draw + inc.draw),
+        awayWin: Math.max(0, (cur.awayWin ?? 0) + dec.awayWin + inc.awayWin),
+        total: Math.max(0, (cur.total ?? 0) + dec.total + inc.total),
+        updatedAt: Timestamp.now(),
+      };
+
+      tx.set(ref, next, {merge: true});
+    });
+
+    logger.info("playoffMatchPredictionStats updated", {
+      matchId,
+      before: beforeOut,
+      after: afterOut,
+    });
+  });
+
 export const onUserWritten = functionsV1
   .region("us-central1")
   .firestore.document("users/{uid}")
@@ -201,6 +268,129 @@ export const backfillPublicUsers = onCall(async (req) => {
     logger.error("backfillPublicUsers failed", e);
     if (e instanceof HttpsError) throw e;
     throw new HttpsError("internal", e instanceof Error ? e.message : String(e));
+  }
+});
+
+export const recalcPlayoffPoints = onCall(async (request) => {
+  try {
+    logger.info("recalcPlayoffPoints called", {
+      hasAuth: Boolean(request.auth),
+      uid: request.auth?.uid ?? null,
+    });
+
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError("unauthenticated", "ログインが必要です");
+    }
+
+    await assertAdmin(uid);
+
+    const db = getFirestore();
+
+    const deletedUserMatchPoints = await clearCollection(db, "playoffUserMatchPoints");
+    const deletedUserStats = await clearCollection(db, "playoffUserStats");
+    logger.info("recalcPlayoffPoints cleared", {
+      deletedUserMatchPoints,
+      deletedUserStats,
+    });
+
+    const cfgSnap = await db.doc("tournamentConfig/current").get();
+    const scoringVersion =
+      (cfgSnap.data() as {scoringVersion?: number} | undefined)?.scoringVersion ?? 1;
+
+    const finishedMatchesSnap = await db
+      .collection("playoffMatches")
+      .where("status", "==", "FINISHED")
+      .get();
+
+    const writer = db.bulkWriter();
+    const totals = new Map<string, number>();
+    let matchesProcessed = 0;
+    let predictionsProcessed = 0;
+    let pointsWritten = 0;
+
+    for (const matchDoc of finishedMatchesSnap.docs) {
+      const matchId = matchDoc.id;
+      const m = matchDoc.data() as PlayoffMatchDoc;
+      if (typeof m.homeScore !== "number" || typeof m.awayScore !== "number") {
+        continue;
+      }
+
+      const predSnap = await db
+        .collection("playoffPredictions")
+        .where("matchId", "==", matchId)
+        .get();
+
+      matchesProcessed += 1;
+      predictionsProcessed += predSnap.size;
+
+      for (const pDoc of predSnap.docs) {
+        const p = pDoc.data() as PlayoffPredictionDoc;
+        if (typeof p.uid !== "string") continue;
+        if (typeof p.homeScore !== "number" || typeof p.awayScore !== "number") continue;
+
+        const points = calcPoints(m.homeScore, m.awayScore, p.homeScore, p.awayScore);
+        totals.set(p.uid, (totals.get(p.uid) ?? 0) + points);
+
+        const id = `${p.uid}_${matchId}`;
+        const ref = db.doc(`playoffUserMatchPoints/${id}`);
+        writer.set(
+          ref,
+          {
+            uid: p.uid,
+            matchId,
+            points,
+            scoringVersion,
+            updatedAt: Timestamp.now(),
+          },
+          {merge: true}
+        );
+        pointsWritten += 1;
+      }
+    }
+
+    for (const [userId, totalPoints] of totals) {
+      const ref = db.doc(`playoffUserStats/${userId}`);
+      writer.set(
+        ref,
+        {
+          uid: userId,
+          totalPoints,
+          scoringVersion,
+          updatedAt: Timestamp.now(),
+        },
+        {merge: true}
+      );
+    }
+
+    await writer.close();
+
+    logger.info("recalcPlayoffPoints complete", {
+      deletedUserMatchPoints,
+      deletedUserStats,
+      matchesProcessed,
+      predictionsProcessed,
+      pointsWritten,
+      usersUpdated: totals.size,
+      scoringVersion,
+    });
+
+    return {
+      deletedUserMatchPoints,
+      deletedUserStats,
+      matchesProcessed,
+      predictionsProcessed,
+      pointsWritten,
+      usersUpdated: totals.size,
+      scoringVersion,
+    };
+  } catch (err) {
+    logger.error("recalcPlayoffPoints failed", err);
+    if (err instanceof HttpsError) throw err;
+    const e = err as any;
+    throw new HttpsError("internal", "recalcPlayoffPoints failed", {
+      message: e?.message ? String(e.message) : String(err),
+    });
   }
 });
 
@@ -286,6 +476,89 @@ export const onMatchWritten = functionsV1
     });
   });
 
+export const onPlayoffMatchWritten = functionsV1
+  .region("us-central1")
+  .firestore.document("playoffMatches/{matchId}")
+  .onWrite(async (change: functionsV1.Change<functionsV1.firestore.DocumentSnapshot>, context) => {
+    const matchId = context.params.matchId as string;
+    const before =
+      (change.before.exists ? (change.before.data() as PlayoffMatchDoc) : null) as PlayoffMatchDoc | null;
+    const after =
+      (change.after.exists ? (change.after.data() as PlayoffMatchDoc) : null) as PlayoffMatchDoc | null;
+
+    if (!after) return;
+
+    const beforeActual = actualScore(before);
+    const afterActual = actualScore(after);
+
+    if (!beforeActual && !afterActual) return;
+
+    const db = getFirestore();
+    const cfgSnap = await db.doc("tournamentConfig/current").get();
+    const scoringVersion = (cfgSnap.data() as {scoringVersion?: number} | undefined)?.scoringVersion ?? 1;
+
+    const predSnap = await db.collection("playoffPredictions").where("matchId", "==", matchId).get();
+    if (predSnap.empty) {
+      logger.info("onPlayoffMatchWritten: no predictions", {matchId});
+      return;
+    }
+
+    const writer = db.bulkWriter();
+    let pointsWritten = 0;
+    let usersUpdated = 0;
+
+    for (const pDoc of predSnap.docs) {
+      const p = pDoc.data() as PlayoffPredictionDoc;
+      if (typeof p.uid !== "string") continue;
+      if (typeof p.homeScore !== "number" || typeof p.awayScore !== "number") continue;
+
+      const oldPoints =
+        beforeActual ? calcPoints(beforeActual.home, beforeActual.away, p.homeScore, p.awayScore) : 0;
+      const newPoints =
+        afterActual ? calcPoints(afterActual.home, afterActual.away, p.homeScore, p.awayScore) : 0;
+      const delta = newPoints - oldPoints;
+
+      const umpId = `${p.uid}_${matchId}`;
+      const umpRef = db.doc(`playoffUserMatchPoints/${umpId}`);
+      writer.set(
+        umpRef,
+        {
+          uid: p.uid,
+          matchId,
+          points: newPoints,
+          scoringVersion,
+          updatedAt: Timestamp.now(),
+        },
+        {merge: true}
+      );
+      pointsWritten += 1;
+
+      if (delta !== 0) {
+        const usRef = db.doc(`playoffUserStats/${p.uid}`);
+        writer.set(
+          usRef,
+          {
+            uid: p.uid,
+            totalPoints: FieldValue.increment(delta),
+            scoringVersion,
+            updatedAt: Timestamp.now(),
+          },
+          {merge: true}
+        );
+        usersUpdated += 1;
+      }
+    }
+
+    await writer.close();
+    logger.info("onPlayoffMatchWritten: points updated", {
+      matchId,
+      pointsWritten,
+      usersUpdated,
+      beforeFinished: Boolean(beforeActual),
+      afterFinished: Boolean(afterActual),
+    });
+  });
+
 function calcPoints(
   actualHome: number,
   actualAway: number,
@@ -295,6 +568,30 @@ function calcPoints(
   if (actualHome === predHome && actualAway === predAway) return 50;
   if (outcome(actualHome, actualAway) === outcome(predHome, predAway)) return 20;
   return 0;
+}
+
+async function clearCollection(db: FirebaseFirestore.Firestore, path: string): Promise<number> {
+  let deleted = 0;
+  let last: FirebaseFirestore.QueryDocumentSnapshot | null = null;
+
+  while (true) {
+    let q = db.collection(path).orderBy("__name__").limit(500);
+    if (last) q = q.startAfter(last);
+    const snap = await q.get();
+    if (snap.empty) break;
+
+    const writer = db.bulkWriter();
+    for (const d of snap.docs) {
+      writer.delete(d.ref);
+      deleted += 1;
+    }
+    await writer.close();
+
+    last = snap.docs[snap.docs.length - 1] ?? null;
+    if (snap.size < 500) break;
+  }
+
+  return deleted;
 }
 
 async function assertAdmin(uid: string): Promise<void> {

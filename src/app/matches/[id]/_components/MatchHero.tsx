@@ -10,6 +10,7 @@ import ScoreStepper from "./ScoreStepper";
 
 type RelatedMatchCard = {
   id: string;
+  href?: string;
   kickoffLabel: string;
   homeName: string;
   awayName: string;
@@ -33,6 +34,8 @@ export default function MatchHero({
   nowMs,
   distribution,
 
+  backHref,
+
   lockedLabel,
   uid,
   predError,
@@ -47,6 +50,7 @@ export default function MatchHero({
   shareStatus,
 
   relatedGroupMatches,
+  relatedMatchesTitle,
 }: {
   match: MatchDoc;
   home: TeamDoc | null;
@@ -60,6 +64,8 @@ export default function MatchHero({
   kickoffMs: number;
   nowMs?: number;
   distribution: PredictionDistribution;
+
+  backHref?: string;
 
   lockedLabel: string;
   uid: string | null;
@@ -75,7 +81,10 @@ export default function MatchHero({
   shareStatus: string | null;
 
   relatedGroupMatches?: RelatedMatchCard[];
+  relatedMatchesTitle?: string;
 }) {
+  const resolvedBackHref = backHref ?? "/results";
+  const resolvedRelatedTitle = relatedMatchesTitle ?? "同じグループの他の試合";
   return (
     <section
       style={{
@@ -97,7 +106,7 @@ export default function MatchHero({
 
       <div style={{ position: "relative", padding: 16, display: "grid", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href="/results" style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 800 }}>
+          <Link href={resolvedBackHref} style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 800 }}>
             ←
           </Link>
           <div
@@ -270,12 +279,12 @@ export default function MatchHero({
 
           {relatedGroupMatches && relatedGroupMatches.length > 0 ? (
             <div style={{ display: "grid", gap: 8, paddingTop: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>同じグループの他の試合</div>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>{resolvedRelatedTitle}</div>
               <div style={{ display: "grid", gap: 8 }}>
                 {relatedGroupMatches.map((m) => (
                   <Link
                     key={m.id}
-                    href={`/matches/${m.id}`}
+                    href={m.href ?? `/matches/${m.id}`}
                     style={{
                       textDecoration: "none",
                       color: "inherit",

@@ -95,6 +95,7 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   { label: "予想する", href: "/matches", icon: "pencil" },
   { label: "ユーザーランキング", href: "/ranking", icon: "trophy" },
+  { label: "プレーオフ", href: "/playoff", icon: "table" },
   { label: "グループステージ", href: "/results", icon: "flag" },
   { label: "決勝トーナメント", href: "/knockout", icon: "table" },
   { label: "マイページ", href: "/me", icon: "user" },

@@ -22,9 +22,11 @@ export default function Countdown({
 }: {
   targetMs: number;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
+    setMounted(true);
     const id = window.setInterval(() => setTick((v) => v + 1), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -53,7 +55,7 @@ export default function Countdown({
       }}
     >
       <span style={{ opacity: 0.9 }}>締切まで</span>
-      <span>{closed ? "締切済み" : formatRemaining(remainingMs)}</span>
+      <span suppressHydrationWarning>{mounted ? (closed ? "締切済み" : formatRemaining(remainingMs)) : "--:--:--"}</span>
     </div>
   );
 }

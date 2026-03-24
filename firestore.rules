@@ -65,6 +65,41 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.uid == request.auth.uid;
     }
 
+    match /playoffPredictions/{predId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn() &&
+        request.resource.data.uid == request.auth.uid &&
+        request.resource.data.keys().hasAll(['uid', 'matchId', 'homeScore', 'awayScore']);
+
+      allow update: if signedIn() &&
+        resource.data.uid == request.auth.uid &&
+        request.resource.data.uid == resource.data.uid &&
+        request.resource.data.matchId == resource.data.matchId;
+
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /playoffMatches/{matchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /playoffMatchPredictionStats/{matchId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /playoffUserMatchPoints/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /playoffUserStats/{uid} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /matchPredictionStats/{matchId} {
       allow read: if true;
       allow write: if false;
