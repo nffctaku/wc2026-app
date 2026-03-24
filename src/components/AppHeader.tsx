@@ -4,6 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+type ThemeMode = "system" | "light" | "dark";
+
+function applyTheme(mode: ThemeMode) {
+  const el = document.documentElement;
+  el.classList.remove("theme-light", "theme-dark");
+  if (mode === "light") el.classList.add("theme-light");
+  if (mode === "dark") el.classList.add("theme-dark");
+}
+
 function IconTrophy() {
   return (
     <svg viewBox="0 0 24 24" className="appDrawerIcon" aria-hidden="true">
@@ -122,6 +131,24 @@ function MenuIcon({ name }: { name: MenuItem["icon"] }) {
 
 export default function AppHeader() {
   const [open, setOpen] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>("system");
+
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("theme");
+      const t = v === "light" || v === "dark" || v === "system" ? v : "system";
+      setTheme(t);
+      applyTheme(t);
+    } catch {}
+  }, []);
+
+  function setThemeMode(next: ThemeMode) {
+    setTheme(next);
+    try {
+      localStorage.setItem("theme", next);
+    } catch {}
+    applyTheme(next);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -168,6 +195,29 @@ export default function AppHeader() {
         </Link>
 
         <nav className="appHeaderMenu" aria-label="Header menu">
+          <div className="themeToggle" role="group" aria-label="Theme">
+            <button
+              type="button"
+              className={theme === "system" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("system")}
+            >
+              自動
+            </button>
+            <button
+              type="button"
+              className={theme === "light" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("light")}
+            >
+              明
+            </button>
+            <button
+              type="button"
+              className={theme === "dark" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("dark")}
+            >
+              暗
+            </button>
+          </div>
           {menuItems.map((item) =>
             item.external ? (
               <a key={item.label} className="appHeaderMenuItem" href={item.href} target="_blank" rel="noreferrer">
@@ -189,6 +239,29 @@ export default function AppHeader() {
 
       <aside className={open ? "appDrawer appDrawerOpen" : "appDrawer"}>
         <nav className="appDrawerNav" aria-label="Menu">
+          <div className="themeToggle themeToggleDrawer" role="group" aria-label="Theme">
+            <button
+              type="button"
+              className={theme === "system" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("system")}
+            >
+              自動
+            </button>
+            <button
+              type="button"
+              className={theme === "light" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("light")}
+            >
+              明
+            </button>
+            <button
+              type="button"
+              className={theme === "dark" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
+              onClick={() => setThemeMode("dark")}
+            >
+              暗
+            </button>
+          </div>
           {menuItems.map((item) =>
             item.external ? (
               <a

@@ -3,6 +3,24 @@
   --foreground: #171717;
 }
 
+html.theme-light {
+  color-scheme: light;
+}
+
+html.theme-light {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html.theme-dark {
+  color-scheme: dark;
+}
+
+html.theme-dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 .appHeader {
   position: fixed;
   top: 0;
@@ -26,6 +44,38 @@
   transform: translateY(-50%);
   align-items: center;
   gap: 10px;
+}
+
+.themeToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.themeToggleButton {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.2px;
+}
+
+.themeToggleButtonActive {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.themeToggleDrawer {
+  width: fit-content;
 }
 
 .appHeaderMenuItem {
@@ -147,6 +197,10 @@
 
 @media (hover: hover) and (pointer: fine) {
   .appHeaderMenuItem:hover {
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  .themeToggleButton:hover {
     background: rgba(0, 0, 0, 0.28);
   }
 }
