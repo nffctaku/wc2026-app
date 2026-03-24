@@ -237,12 +237,43 @@ export default function PlayoffRankingPage() {
       />
 
       <div style={{ position: "relative", width: "min(520px, 100%)", display: "grid", gap: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <Link href="/playoff" style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 900 }}>
-            ← プレーオフ
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <Link
+            href="/playoff"
+            style={{
+              display: "grid",
+              placeItems: "center",
+              padding: "7px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              color: "inherit",
+              textDecoration: "none",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: 0.2,
+            }}
+          >
+            プレーオフ
           </Link>
-          <div style={{ fontWeight: 900 }}>プレーオフランキング</div>
-          <div style={{ width: 60 }} />
+          <Link
+            href="/playoff/me"
+            style={{
+              display: "grid",
+              placeItems: "center",
+              padding: "7px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.10)",
+              background: "rgba(255,255,255,0.04)",
+              color: "inherit",
+              textDecoration: "none",
+              fontWeight: 800,
+              fontSize: 12,
+              letterSpacing: 0.2,
+            }}
+          >
+            プレーオフマイページ
+          </Link>
         </div>
 
         {busy ? <div style={{ color: "rgba(255,255,255,0.92)", fontWeight: 900 }}>読込中...</div> : null}

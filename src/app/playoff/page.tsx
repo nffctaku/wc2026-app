@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 
-import { playoffBlocks, type PlayoffMatch } from "./_lib/playoffMatches";
+import { playoffBlocks, type PlayoffMatch, type PlayoffMatchId } from "./_lib/playoffMatches";
 import { db } from "@/lib/firebase/client";
 
 type PlayoffMatchResultDoc = {
@@ -152,6 +152,43 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
 export default function PlayoffPage() {
   const [resultsById, setResultsById] = useState<Map<string, PlayoffMatchResultDoc>>(new Map());
 
+  const matchById = new Map<PlayoffMatchId, PlayoffMatch>(playoffBlocks.flatMap((b) => b.matches).map((m) => [m.id, m] as const));
+
+  const winnerNameByMatchId = (matchId: PlayoffMatchId): string | null => {
+    const meta = matchById.get(matchId);
+    const res = resultsById.get(matchId);
+    if (!meta || !res) return null;
+    if (res.status !== "FINISHED") return null;
+    if (typeof res.homeScore !== "number" || typeof res.awayScore !== "number") return null;
+    if (res.homeScore === res.awayScore) return null;
+    return res.homeScore > res.awayScore ? meta.home : meta.away;
+  };
+
+  const finalRefs: Partial<Record<PlayoffMatchId, { homeFrom: PlayoffMatchId; awayFrom: PlayoffMatchId }>> = {
+    A3: { homeFrom: "A2", awayFrom: "A1" },
+    B3: { homeFrom: "B1", awayFrom: "B2" },
+    C3: { homeFrom: "C2", awayFrom: "C1" },
+    D3: { homeFrom: "D2", awayFrom: "D1" },
+  };
+
+  const displayBlocks = playoffBlocks.map((b) => {
+    return {
+      ...b,
+      matches: b.matches.map((m) => {
+        if (m.label !== "決勝") return m;
+        const ref = finalRefs[m.id];
+        if (!ref) return m;
+        const homeWinner = winnerNameByMatchId(ref.homeFrom);
+        const awayWinner = winnerNameByMatchId(ref.awayFrom);
+        return {
+          ...m,
+          home: homeWinner ?? m.home,
+          away: awayWinner ?? m.away,
+        };
+      }),
+    };
+  });
+
   useEffect(() => {
     async function run() {
       try {
@@ -191,8 +228,6 @@ export default function PlayoffPage() {
       />
 
       <div style={{ position: "relative", display: "grid", alignContent: "start", gap: 12 }}>
-        <div style={{ fontWeight: 900, fontSize: 18 }}>プレーオフ</div>
-
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <Link
             href="/playoff/ranking"
@@ -233,7 +268,7 @@ export default function PlayoffPage() {
         </div>
 
         <div style={{ display: "grid", gap: 14 }}>
-          {playoffBlocks.map((b) => (
+          {displayBlocks.map((b) => (
             <section key={b.blockName} style={{ display: "grid", gap: 10 }}>
               <div style={{ fontWeight: 900, fontSize: 16 }}>{b.blockName}</div>
               <div style={{ display: "grid", gap: 10 }}>

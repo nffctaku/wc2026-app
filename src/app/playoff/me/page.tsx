@@ -188,12 +188,43 @@ export default function PlayoffMePage() {
 
       <main className={styles.main} style={{ position: "relative", backgroundColor: "transparent", paddingTop: 36, paddingBottom: 36 }}>
         <div style={{ width: "100%", display: "grid", gap: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <Link href="/playoff" style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 900 }}>
-              ← プレーオフ
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            <Link
+              href="/playoff"
+              style={{
+                display: "grid",
+                placeItems: "center",
+                padding: "7px 10px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.95)",
+                textDecoration: "none",
+                fontWeight: 800,
+                fontSize: 12,
+                letterSpacing: 0.2,
+              }}
+            >
+              プレーオフ
             </Link>
-            <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.95)" }}>プレーオフ マイページ</div>
-            <div style={{ width: 60 }} />
+            <Link
+              href="/playoff/ranking"
+              style={{
+                display: "grid",
+                placeItems: "center",
+                padding: "7px 10px",
+                borderRadius: 10,
+                border: "1px solid rgba(255,255,255,0.10)",
+                background: "rgba(255,255,255,0.04)",
+                color: "rgba(255,255,255,0.95)",
+                textDecoration: "none",
+                fontWeight: 800,
+                fontSize: 12,
+                letterSpacing: 0.2,
+              }}
+            >
+              プレーオフランキング
+            </Link>
           </div>
 
           <div
