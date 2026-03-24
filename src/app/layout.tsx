@@ -42,15 +42,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(() => { try { const key = 'theme'; const v = localStorage.getItem(key); const t = v === 'light' || v === 'dark' || v === 'system' ? v : 'system'; const el = document.documentElement; el.classList.remove('theme-light', 'theme-dark'); if (t === 'light') el.classList.add('theme-light'); if (t === 'dark') el.classList.add('theme-dark'); } catch {} })();",
-          }}
-        />
-      </head>
+    <html lang="ja">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AppHeader />
         <main className="appMain">{children}</main>

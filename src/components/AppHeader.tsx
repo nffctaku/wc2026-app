@@ -4,14 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-type ThemeMode = "system" | "light" | "dark";
-
-function applyTheme(mode: ThemeMode) {
-  const el = document.documentElement;
-  el.classList.remove("theme-light", "theme-dark");
-  if (mode === "light") el.classList.add("theme-light");
-  if (mode === "dark") el.classList.add("theme-dark");
-}
+import useProfileStats from "@/app/me/_lib/useProfileStats";
+import { auth } from "@/lib/firebase/client";
+import { subscribeAuth } from "@/lib/firebase/auth";
 
 function IconTrophy() {
   return (
@@ -99,13 +94,10 @@ type MenuItem = {
 
 const menuItems: MenuItem[] = [
   { label: "予想する", href: "/matches", icon: "pencil" },
-  { label: "ランキング", href: "/ranking", icon: "trophy" },
+  { label: "ユーザーランキング", href: "/ranking", icon: "trophy" },
   { label: "グループステージ", href: "/results", icon: "flag" },
-  { label: "決勝T", href: "/knockout", icon: "table" },
+  { label: "決勝トーナメント", href: "/knockout", icon: "table" },
   { label: "マイページ", href: "/me", icon: "user" },
-  { label: "仕様", href: "/spec", icon: "table" },
-  { label: "SNS", href: "https://x.com/", icon: "x", external: true },
-  { label: "お問合せ", href: "/contact", icon: "mail" },
 ];
 
 function MenuIcon({ name }: { name: MenuItem["icon"] }) {
@@ -129,26 +121,26 @@ function MenuIcon({ name }: { name: MenuItem["icon"] }) {
   }
 }
 
+function drawerItemClassName(item: MenuItem): string {
+  if (item.href === "/matches") return "appDrawerItem appDrawerItemPrimary";
+  if (item.href === "/ranking") return "appDrawerItem appDrawerItemOutline";
+  return "appDrawerItem appDrawerItemSecondary";
+}
+
 export default function AppHeader() {
   const [open, setOpen] = useState(false);
-  const [theme, setTheme] = useState<ThemeMode>("system");
+  const [user, setUser] = useState(() => auth.currentUser);
+  const [avatarBroken, setAvatarBroken] = useState(false);
+
+  const uid = user?.uid ?? null;
+  const { totalPoints, ranking, totalUsers, userDoc } = useProfileStats(uid, { subscribeUserDoc: true });
+  const photoUrl = !avatarBroken ? (userDoc?.photoURL ?? user?.photoURL ?? null) : null;
 
   useEffect(() => {
-    try {
-      const v = localStorage.getItem("theme");
-      const t = v === "light" || v === "dark" || v === "system" ? v : "system";
-      setTheme(t);
-      applyTheme(t);
-    } catch {}
+    return subscribeAuth((u) => {
+      setUser(u);
+    });
   }, []);
-
-  function setThemeMode(next: ThemeMode) {
-    setTheme(next);
-    try {
-      localStorage.setItem("theme", next);
-    } catch {}
-    applyTheme(next);
-  }
 
   useEffect(() => {
     if (!open) return;
@@ -195,29 +187,6 @@ export default function AppHeader() {
         </Link>
 
         <nav className="appHeaderMenu" aria-label="Header menu">
-          <div className="themeToggle" role="group" aria-label="Theme">
-            <button
-              type="button"
-              className={theme === "system" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("system")}
-            >
-              自動
-            </button>
-            <button
-              type="button"
-              className={theme === "light" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("light")}
-            >
-              明
-            </button>
-            <button
-              type="button"
-              className={theme === "dark" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("dark")}
-            >
-              暗
-            </button>
-          </div>
           {menuItems.map((item) =>
             item.external ? (
               <a key={item.label} className="appHeaderMenuItem" href={item.href} target="_blank" rel="noreferrer">
@@ -239,54 +208,82 @@ export default function AppHeader() {
 
       <aside className={open ? "appDrawer appDrawerOpen" : "appDrawer"}>
         <nav className="appDrawerNav" aria-label="Menu">
-          <div className="themeToggle themeToggleDrawer" role="group" aria-label="Theme">
-            <button
-              type="button"
-              className={theme === "system" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("system")}
-            >
-              自動
-            </button>
-            <button
-              type="button"
-              className={theme === "light" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("light")}
-            >
-              明
-            </button>
-            <button
-              type="button"
-              className={theme === "dark" ? "themeToggleButton themeToggleButtonActive" : "themeToggleButton"}
-              onClick={() => setThemeMode("dark")}
-            >
-              暗
-            </button>
-          </div>
+          {uid ? (
+            <div className="appDrawerProfile">
+              <div className="appDrawerAvatar">
+                {photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={photoUrl} alt="" referrerPolicy="no-referrer" onError={() => setAvatarBroken(true)} />
+                ) : (
+                  <div className="appDrawerAvatarFallback" aria-hidden="true" />
+                )}
+              </div>
+
+              <div className="appDrawerProfileMeta">
+                <div className="appDrawerProfilePoints">
+                  <span className="appDrawerProfilePointsValue">
+                    {typeof totalPoints === "number" ? totalPoints.toLocaleString("ja-JP") : "-"}
+                  </span>
+                  <span className="appDrawerProfilePointsUnit">Pts</span>
+                </div>
+                <div className="appDrawerProfileRank">
+                  RANK {typeof ranking === "number" ? ranking.toLocaleString("ja-JP") : "-"}
+                  {typeof totalUsers === "number" ? ` / ${totalUsers.toLocaleString("ja-JP")}` : ""}
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           {menuItems.map((item) =>
             item.external ? (
               <a
                 key={item.label}
-                className="appDrawerItem"
+                className={drawerItemClassName(item)}
                 href={item.href}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setOpen(false)}
               >
-                <MenuIcon name={item.icon} />
+                {item.href === "/me" ? <MenuIcon name={item.icon} /> : null}
                 {item.label}
               </a>
             ) : (
               <Link
                 key={item.label}
-                className="appDrawerItem"
+                className={drawerItemClassName(item)}
                 href={item.href}
                 onClick={() => setOpen(false)}
               >
-                <MenuIcon name={item.icon} />
+                {item.href === "/me" ? <MenuIcon name={item.icon} /> : null}
                 {item.label}
               </Link>
             )
           )}
+
+          <div className="appDrawerBottomIcons" aria-label="Links">
+            <a
+              className="appDrawerCircleButton"
+              href="https://x.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="X"
+              onClick={() => setOpen(false)}
+            >
+              <IconX />
+            </a>
+            <Link
+              className="appDrawerCircleButton"
+              href="/contact"
+              aria-label="Contact"
+              onClick={() => setOpen(false)}
+            >
+              <IconMail />
+            </Link>
+          </div>
+
+          <Link className="appDrawerSpecLink" href="/spec" onClick={() => setOpen(false)}>
+            仕様
+          </Link>
         </nav>
       </aside>
     </>

@@ -4,26 +4,6 @@
   --muted-foreground: rgba(0, 0, 0, 0.7);
 }
 
-html.theme-light {
-  color-scheme: light;
-}
-
-html.theme-light {
-  --background: #ffffff;
-  --foreground: #171717;
-  --muted-foreground: rgba(0, 0, 0, 0.7);
-}
-
-html.theme-dark {
-  color-scheme: dark;
-}
-
-html.theme-dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-  --muted-foreground: rgba(237, 237, 237, 0.78);
-}
-
 .appHeader {
   position: fixed;
   top: 0;
@@ -47,38 +27,6 @@ html.theme-dark {
   transform: translateY(-50%);
   align-items: center;
   gap: 10px;
-}
-
-.themeToggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.themeToggleButton {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.9);
-  font-weight: 800;
-  font-size: 12px;
-  letter-spacing: 0.2px;
-}
-
-.themeToggleButtonActive {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-.themeToggleDrawer {
-  width: fit-content;
 }
 
 .appHeaderMenuItem {
@@ -133,6 +81,101 @@ html.theme-dark {
   gap: 10px;
 }
 
+.appDrawerSpecLink {
+  margin-top: 6px;
+  padding: 6px 4px;
+  width: fit-content;
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.appDrawerProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 10px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.appDrawerAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex: 0 0 44px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.appDrawerAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.appDrawerAvatarFallback {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.22), rgba(255,255,255,0.06));
+}
+
+.appDrawerProfileMeta {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.appDrawerProfilePoints {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1;
+}
+
+.appDrawerProfilePointsValue {
+  font-weight: 900;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.appDrawerProfilePointsUnit {
+  font-weight: 900;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.appDrawerProfileRank {
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+.appDrawerBottomIcons {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+}
+
+.appDrawerCircleButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.appDrawerCircleButton .appDrawerIcon {
+  margin-right: 0;
+}
+
 .appDrawerItem {
   display: flex;
   align-items: center;
@@ -142,6 +185,34 @@ html.theme-dark {
   color: rgba(255, 255, 255, 0.96);
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.appDrawerItemPrimary {
+  justify-content: center;
+  background: #f4c94b;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(11, 31, 58, 0.98);
+  font-weight: 900;
+}
+
+.appDrawerItemOutline {
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(244, 201, 75, 0.88);
+  color: rgba(244, 201, 75, 0.96);
+  font-weight: 900;
+}
+
+.appDrawerItemSecondary {
+  justify-content: flex-start;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 900;
+}
+
+.appDrawerItemSecondary .appDrawerIcon {
+  margin-right: 10px;
 }
 
 .appDrawerIcon {
@@ -200,10 +271,6 @@ html.theme-dark {
 
 @media (hover: hover) and (pointer: fine) {
   .appHeaderMenuItem:hover {
-    background: rgba(0, 0, 0, 0.28);
-  }
-
-  .themeToggleButton:hover {
     background: rgba(0, 0, 0, 0.28);
   }
 }
