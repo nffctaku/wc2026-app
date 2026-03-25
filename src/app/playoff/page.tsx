@@ -82,6 +82,20 @@ function TeamLine({ name }: { name: string }) {
 
 function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMatchResultDoc }) {
   const finished = result?.status === "FINISHED" && typeof result.homeScore === "number" && typeof result.awayScore === "number";
+  const kickoffLabel = (() => {
+    try {
+      const d = new Date(match.kickoffAtIso);
+      return d.toLocaleString("ja-JP", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  })();
   return (
     <Link
       href={`/playoff/${encodeURIComponent(match.id)}`}
@@ -115,7 +129,7 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
             WebkitBoxOrient: "vertical",
           }}
         >
-          
+          {kickoffLabel}
         </div>
       </div>
       <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
