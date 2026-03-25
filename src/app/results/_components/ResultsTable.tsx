@@ -144,7 +144,7 @@ export default function ResultsTable({
                                   padding: "6px 10px",
                                   borderRadius: 999,
                                   border: "1px solid rgba(0,0,0,0.10)",
-                                  background: "#ff9f1c",
+                                  background: "rgba(224,106,0,0.95)",
                                   fontSize: 12,
                                   fontWeight: 800,
                                   color: "#fff",

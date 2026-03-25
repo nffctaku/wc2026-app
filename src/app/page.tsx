@@ -14,16 +14,16 @@ export default function Home() {
       className={styles.page}
       style={{
         minHeight: "100vh",
-        backgroundColor: "#040913",
-        backgroundImage: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
+        backgroundColor: "#fff8e7",
+        backgroundImage: "linear-gradient(180deg, #fffdf6 0%, #fff3da 100%)",
         position: "relative",
         ["--background" as any]: "transparent",
         ["--foreground" as any]: "transparent",
-        ["--text-primary" as any]: "rgba(255,255,255,0.96)",
-        ["--text-secondary" as any]: "rgba(255,255,255,0.72)",
-        ["--button-secondary-border" as any]: "rgba(255,255,255,0.18)",
-        ["--button-secondary-hover" as any]: "rgba(255,255,255,0.10)",
-        ["--button-primary-hover" as any]: "rgba(255,255,255,0.86)",
+        ["--text-primary" as any]: "rgba(0,0,0,0.92)",
+        ["--text-secondary" as any]: "rgba(0,0,0,0.62)",
+        ["--button-secondary-border" as any]: "rgba(0,0,0,0.12)",
+        ["--button-secondary-hover" as any]: "rgba(0,0,0,0.06)",
+        ["--button-primary-hover" as any]: "rgba(0,0,0,0.84)",
       }}
     >
       <div className={`${styles.bgLayer} ${styles.bg1}`} />
@@ -33,7 +33,7 @@ export default function Home() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "rgba(0,0,0,0.38)",
+          background: "rgba(255,255,255,0.0)",
           pointerEvents: "none",
         }}
       />
@@ -41,13 +41,13 @@ export default function Home() {
         style={{
           position: "absolute",
           inset: 0,
-          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
+          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.55), transparent 56%)",
           pointerEvents: "none",
         }}
       />
       <main className={styles.main} style={{ position: "relative", backgroundColor: "transparent", paddingTop: 36, paddingBottom: 36 }}>
         <div style={{ width: "100%", display: "grid", gap: 18 }}>
-          <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: 0.2, color: "rgba(255,255,255,0.96)" }}>
+          <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: 0.2, color: "rgba(0,0,0,0.92)" }}>
             FIFA World Cup 2026
           </div>
           <HomeCountdown kickoffIso={kickoffIso} />

@@ -441,32 +441,31 @@ export default function TournamentPredictionsView(props: {
                     </div>
                   );
                 })}
-
               </div>
+
+              <Link
+                href="/results"
+                style={{
+                  padding: 13,
+                  borderRadius: 999,
+                  border: "1px solid rgba(0,0,0,0.10)",
+                  fontWeight: 900,
+                  background: "linear-gradient(180deg, #f07a00 0%, #e06a00 100%)",
+                  boxShadow: "0 18px 34px rgba(224, 106, 0, 0.28)",
+                  color: "rgba(255,255,255,0.96)",
+                  textAlign: "center",
+                  textDecoration: "none",
+                }}
+              >
+                各試合の予想
+              </Link>
+
+              {props.showSavedToLabel ? (
+                <div style={{ color: "rgba(255,255,255,0.70)", fontWeight: 900, fontSize: 12 }}>
+                  保存先: users/{props.uid}
+                </div>
+              ) : null}
             </div>
-
-            <Link
-              href="/results"
-              style={{
-                padding: 13,
-                borderRadius: 999,
-                border: "1px solid rgba(0,0,0,0.10)",
-                fontWeight: 900,
-                background: "linear-gradient(180deg, #ff9a1f 0%, #f97316 100%)",
-                boxShadow: "0 18px 34px rgba(249, 115, 22, 0.28)",
-                color: "rgba(255,255,255,0.96)",
-                textAlign: "center",
-                textDecoration: "none",
-              }}
-            >
-              各試合の予想
-            </Link>
-
-            {props.showSavedToLabel ? (
-              <div style={{ color: "rgba(255,255,255,0.70)", fontWeight: 900, fontSize: 12 }}>
-                保存先: users/{props.uid}
-              </div>
-            ) : null}
           </div>
         )}
       </div>

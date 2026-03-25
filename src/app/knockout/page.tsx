@@ -428,7 +428,7 @@ export default function KnockoutPage() {
                               padding: "6px 10px",
                               borderRadius: 999,
                               border: "1px solid rgba(255,255,255,0.14)",
-                              background: "rgba(255,159,28,0.95)",
+                              background: "rgba(224,106,0,0.95)",
                               fontSize: 12,
                               fontWeight: 800,
                               color: "#fff",

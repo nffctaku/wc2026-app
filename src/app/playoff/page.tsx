@@ -106,13 +106,13 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
         alignItems: "center",
         padding: "10px 12px",
         borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.14)",
-        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(0,0,0,0.10)",
+        background: "rgba(255,255,255,0.62)",
         color: "inherit",
         textDecoration: "none",
       }}
     >
-      <div style={{ fontSize: 12, color: "rgba(255,255,255,0.72)", fontWeight: 900 }}>{match.label}</div>
+      <div style={{ fontSize: 12, color: "rgba(0,0,0,0.62)", fontWeight: 900 }}>{match.label}</div>
       <div style={{ minWidth: 0 }}>
         <div style={{ display: "grid", gridTemplateRows: "auto auto", gap: 4 }}>
           <TeamLine name={match.home} />
@@ -121,7 +121,7 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
         <div
           style={{
             fontSize: 11,
-            color: "rgba(255,255,255,0.62)",
+            color: "rgba(0,0,0,0.55)",
             marginTop: 4,
             overflow: "hidden",
             display: "-webkit-box",
@@ -135,10 +135,10 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
       <div style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
         {finished ? (
           <div style={{ display: "grid", justifyItems: "end", gap: 2 }}>
-            <div style={{ fontWeight: 900, fontSize: 16, color: "rgba(255,255,255,0.96)" }}>
+            <div style={{ fontWeight: 900, fontSize: 16, color: "rgba(0,0,0,0.88)" }}>
               {result.homeScore}-{result.awayScore}
             </div>
-            <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(255,255,255,0.66)" }}>FT</div>
+            <div style={{ fontSize: 10, fontWeight: 900, color: "rgba(0,0,0,0.55)" }}>FT</div>
           </div>
         ) : (
           <span
@@ -148,8 +148,8 @@ function MatchCard({ match, result }: { match: PlayoffMatch; result?: PlayoffMat
               justifyContent: "center",
               padding: "6px 10px",
               borderRadius: 999,
-              border: "1px solid rgba(255,255,255,0.14)",
-              background: "rgba(255,159,28,0.95)",
+              border: "1px solid rgba(0,0,0,0.10)",
+              background: "rgba(224,106,0,0.95)",
               fontSize: 12,
               fontWeight: 800,
               color: "#fff",
@@ -228,8 +228,9 @@ export default function PlayoffPage() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
-        color: "#fff",
+        background:
+          "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.72), transparent 56%), linear-gradient(180deg, #fffdf6 0%, #fff3da 100%)",
+        color: "rgba(0,0,0,0.88)",
         position: "relative",
         padding: 24,
         display: "grid",
@@ -237,15 +238,6 @@ export default function PlayoffPage() {
         gap: 12,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
-          pointerEvents: "none",
-        }}
-      />
-
       <div style={{ position: "relative", display: "grid", alignContent: "start", gap: 12 }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <Link
@@ -255,8 +247,8 @@ export default function PlayoffPage() {
               placeItems: "center",
               padding: "7px 10px",
               borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(0,0,0,0.10)",
+              background: "rgba(255,255,255,0.62)",
               color: "inherit",
               textDecoration: "none",
               fontWeight: 800,
@@ -273,8 +265,8 @@ export default function PlayoffPage() {
               placeItems: "center",
               padding: "7px 10px",
               borderRadius: 10,
-              border: "1px solid rgba(255,255,255,0.10)",
-              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(0,0,0,0.10)",
+              background: "rgba(255,255,255,0.62)",
               color: "inherit",
               textDecoration: "none",
               fontWeight: 800,

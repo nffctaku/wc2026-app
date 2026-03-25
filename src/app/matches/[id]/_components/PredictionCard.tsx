@@ -83,9 +83,9 @@ export default function PredictionCard({
             border: "0",
             background:
               canEditPrediction && !predBusy
-                ? "linear-gradient(180deg, #ff9a1f 0%, #f97316 100%)"
+                ? "linear-gradient(180deg, #f07a00 0%, #e06a00 100%)"
                 : "rgba(255,255,255,0.22)",
-            boxShadow: canEditPrediction && !predBusy ? "0 16px 28px rgba(249, 115, 22, 0.28)" : "none",
+            boxShadow: canEditPrediction && !predBusy ? "0 16px 28px rgba(224, 106, 0, 0.28)" : "none",
             color: "rgba(255,255,255,0.96)",
             fontWeight: 900,
             cursor: canEditPrediction && !predBusy ? "pointer" : "not-allowed",
