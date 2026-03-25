@@ -11,6 +11,7 @@ type PlayoffMatchResultDoc = {
   status?: "SCHEDULED" | "FINISHED";
   homeScore?: number;
   awayScore?: number;
+  winner?: "HOME" | "AWAY";
 };
 
 function flagSrcByTeamName(name: string): string | null {
@@ -160,7 +161,11 @@ export default function PlayoffPage() {
     if (!meta || !res) return null;
     if (res.status !== "FINISHED") return null;
     if (typeof res.homeScore !== "number" || typeof res.awayScore !== "number") return null;
-    if (res.homeScore === res.awayScore) return null;
+    if (res.homeScore === res.awayScore) {
+      if (res.winner === "HOME") return meta.home;
+      if (res.winner === "AWAY") return meta.away;
+      return null;
+    }
     return res.homeScore > res.awayScore ? meta.home : meta.away;
   };
 

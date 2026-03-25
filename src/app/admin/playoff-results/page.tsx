@@ -13,6 +13,7 @@ import { playoffMatches } from "@/app/playoff/_lib/playoffMatches";
 type ScoreDraft = {
   homeScore: string;
   awayScore: string;
+  winner: "" | "HOME" | "AWAY";
 };
 
 type PlayoffMatchDoc = {
@@ -20,6 +21,7 @@ type PlayoffMatchDoc = {
   status?: "SCHEDULED" | "FINISHED";
   homeScore?: number;
   awayScore?: number;
+  winner?: "HOME" | "AWAY";
   label?: string;
   block?: string;
   homeName?: string;
@@ -93,6 +95,7 @@ export default function AdminPlayoffResultsPage() {
           nextDrafts[pm.id] = {
             homeScore: typeof cur?.homeScore === "number" ? String(cur.homeScore) : "",
             awayScore: typeof cur?.awayScore === "number" ? String(cur.awayScore) : "",
+            winner: cur?.winner === "HOME" || cur?.winner === "AWAY" ? cur.winner : "",
           };
         }
         setDrafts(nextDrafts);
@@ -142,6 +145,7 @@ export default function AdminPlayoffResultsPage() {
             status: "SCHEDULED",
             homeScore: deleteField(),
             awayScore: deleteField(),
+            winner: deleteField(),
             resultUpdatedAt: deleteField(),
           },
           { merge: true }
@@ -156,6 +160,7 @@ export default function AdminPlayoffResultsPage() {
             status: "SCHEDULED",
             homeScore: undefined,
             awayScore: undefined,
+            winner: undefined,
             resultUpdatedAt: undefined,
           });
           return next;
@@ -197,6 +202,13 @@ export default function AdminPlayoffResultsPage() {
     try {
       const kickoff = Timestamp.fromDate(new Date(base.kickoffAtIso));
 
+      const winner = draft.winner === "HOME" || draft.winner === "AWAY" ? draft.winner : null;
+      if (hs === as && !winner) {
+        setError("同点の場合は勝者（PK）を選択してください");
+        setBusy(false);
+        return;
+      }
+
       await setDoc(
         doc(db, "playoffMatches", matchId),
         {
@@ -204,6 +216,7 @@ export default function AdminPlayoffResultsPage() {
           status: "FINISHED",
           homeScore: hs,
           awayScore: as,
+          winner: hs === as ? winner : deleteField(),
           block: base.block,
           label: base.label,
           homeName: base.home,
@@ -223,6 +236,7 @@ export default function AdminPlayoffResultsPage() {
           status: "FINISHED",
           homeScore: hs,
           awayScore: as,
+          winner: hs === as ? (winner ?? undefined) : undefined,
           block: base.block,
           label: base.label,
           homeName: base.home,
@@ -281,8 +295,11 @@ export default function AdminPlayoffResultsPage() {
             <tbody>
               {playoffMatches.map((m) => {
                 const cur = existingById.get(m.id);
-                const draft = drafts[m.id] ?? { homeScore: "", awayScore: "" };
+                const draft = drafts[m.id] ?? { homeScore: "", awayScore: "", winner: "" };
                 const kickoffLabel = cur?.kickoffAt ? formatTs(cur.kickoffAt) : "";
+                const hsN = Number(draft.homeScore.trim());
+                const asN = Number(draft.awayScore.trim());
+                const showWinner = Number.isFinite(hsN) && Number.isFinite(asN) && hsN === asN && draft.homeScore.trim() !== "" && draft.awayScore.trim() !== "";
                 return (
                   <tr key={m.id}>
                     <td style={{ padding: 8, borderBottom: "1px solid #eee", whiteSpace: "nowrap" }}>{m.id}</td>
@@ -303,6 +320,13 @@ export default function AdminPlayoffResultsPage() {
                           onChange={(e) => setDraft(m.id, { awayScore: e.target.value })}
                           style={{ width: 60, padding: 6 }}
                         />
+                        {showWinner ? (
+                          <select value={draft.winner} onChange={(e) => setDraft(m.id, { winner: e.target.value as any })} style={{ padding: 6 }}>
+                            <option value="">勝者(PK)</option>
+                            <option value="HOME">HOME</option>
+                            <option value="AWAY">AWAY</option>
+                          </select>
+                        ) : null}
                       </div>
                     </td>
                     <td style={{ padding: 8, borderBottom: "1px solid #eee", whiteSpace: "nowrap" }}>{cur?.status ?? ""}</td>

@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { doc, getDoc, onSnapshot, setDoc, Timestamp } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, onSnapshot, setDoc, Timestamp } from "firebase/firestore";
 
 import { db } from "@/lib/firebase/client";
 import { subscribeAuth } from "@/lib/firebase/auth";
@@ -12,7 +12,14 @@ import MatchHero from "../../matches/[id]/_components/MatchHero";
 import type { PredictionDistribution } from "../../matches/[id]/_components/PredictionDistributionBar";
 import { formatKickoff, formatTs, localFlagSrc } from "../../matches/[id]/_lib/format";
 
-import { getPlayoffMatch, playoffMatches } from "../_lib/playoffMatches";
+import { getPlayoffMatch, playoffMatches, type PlayoffMatchId } from "../_lib/playoffMatches";
+
+type PlayoffMatchResultDoc = {
+  status?: "SCHEDULED" | "FINISHED";
+  homeScore?: number;
+  awayScore?: number;
+  winner?: "HOME" | "AWAY";
+};
 
 type PlayoffPredictionDoc = {
   uid: string;
@@ -28,6 +35,8 @@ export default function PlayoffMatchPage() {
   const routeId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   const playoff = useMemo(() => (routeId ? getPlayoffMatch(routeId) : null), [routeId]);
+
+  const [resultsById, setResultsById] = useState<Map<string, PlayoffMatchResultDoc>>(new Map());
 
   const [uid, setUid] = useState<string | null>(null);
   const [predBusy, setPredBusy] = useState(false);
@@ -56,6 +65,70 @@ export default function PlayoffMatchPage() {
       setPredError(null);
     });
   }, []);
+
+  useEffect(() => {
+    async function run() {
+      if (!playoff) {
+        setResultsById(new Map());
+        return;
+      }
+      try {
+        const snap = await getDocs(collection(db, "playoffMatches"));
+        const m = new Map<string, PlayoffMatchResultDoc>();
+        for (const d of snap.docs) {
+          m.set(d.id, d.data() as PlayoffMatchResultDoc);
+        }
+        setResultsById(m);
+      } catch {
+        setResultsById(new Map());
+      }
+    }
+    void run();
+  }, [playoff?.id]);
+
+  const resolvedPlayoff = useMemo(() => {
+    if (!playoff) return null;
+
+    const matchById = new Map<PlayoffMatchId, (typeof playoffMatches)[number]>(playoffMatches.map((m) => [m.id, m] as const));
+
+    const winnerTeamByMatchId = (matchId: PlayoffMatchId): { name: string; code?: string } | null => {
+      const meta = matchById.get(matchId);
+      const res = resultsById.get(matchId);
+      if (!meta || !res) return null;
+      if (res.status !== "FINISHED") return null;
+      if (typeof res.homeScore !== "number" || typeof res.awayScore !== "number") return null;
+      if (res.homeScore === res.awayScore) {
+        if (res.winner === "HOME") return { name: meta.home, code: meta.homeCode };
+        if (res.winner === "AWAY") return { name: meta.away, code: meta.awayCode };
+        return null;
+      }
+
+      if (res.homeScore > res.awayScore) return { name: meta.home, code: meta.homeCode };
+      return { name: meta.away, code: meta.awayCode };
+    };
+
+    const finalRefs: Partial<Record<PlayoffMatchId, { homeFrom: PlayoffMatchId; awayFrom: PlayoffMatchId }>> = {
+      A3: { homeFrom: "A2", awayFrom: "A1" },
+      B3: { homeFrom: "B1", awayFrom: "B2" },
+      C3: { homeFrom: "C2", awayFrom: "C1" },
+      D3: { homeFrom: "D2", awayFrom: "D1" },
+    };
+
+    if (playoff.label !== "決勝") return playoff;
+    const ref = finalRefs[playoff.id];
+    if (!ref) return playoff;
+
+    const homeWinner = winnerTeamByMatchId(ref.homeFrom);
+    const awayWinner = winnerTeamByMatchId(ref.awayFrom);
+
+    return {
+      ...playoff,
+      home: homeWinner?.name ?? playoff.home,
+      away: awayWinner?.name ?? playoff.away,
+      homeCode: homeWinner?.code ?? playoff.homeCode,
+      awayCode: awayWinner?.code ?? playoff.awayCode,
+    };
+  }, [playoff, resultsById]);
 
   useEffect(() => {
     async function run() {
@@ -144,40 +217,47 @@ export default function PlayoffMatchPage() {
   }, [playoff?.id]);
 
   const matchDoc = useMemo((): MatchDoc | null => {
-    if (!playoff) return null;
-    const kickoff = new Date(playoff.kickoffAtIso);
+    if (!resolvedPlayoff) return null;
+
+    const res = resultsById.get(resolvedPlayoff.id);
+    const finished =
+      res?.status === "FINISHED" && typeof res.homeScore === "number" && typeof res.awayScore === "number";
+
+    const kickoff = new Date(resolvedPlayoff.kickoffAtIso);
     const lockAt = new Date(kickoff.getTime() - 30 * 60 * 1000);
     return {
       matchNumber: 0,
-      stageNameJa: `プレーオフ / ブロック${playoff.block} / ${playoff.label}`,
+      stageNameJa: `プレーオフ / ブロック${resolvedPlayoff.block} / ${resolvedPlayoff.label}`,
       groupNameJa: "",
       kickoffAt: Timestamp.fromDate(kickoff),
       lockAt: Timestamp.fromDate(lockAt),
-      homeTeamId: playoff.homeCode ? `PO_${playoff.homeCode}` : `PO_${playoff.id}_HOME`,
-      awayTeamId: playoff.awayCode ? `PO_${playoff.awayCode}` : `PO_${playoff.id}_AWAY`,
+      homeTeamId: resolvedPlayoff.homeCode ? `PO_${resolvedPlayoff.homeCode}` : `PO_${resolvedPlayoff.id}_HOME`,
+      awayTeamId: resolvedPlayoff.awayCode ? `PO_${resolvedPlayoff.awayCode}` : `PO_${resolvedPlayoff.id}_AWAY`,
       stadiumNameJa: "",
       cityNameJa: "",
-      status: "SCHEDULED",
+      status: finished ? "FINISHED" : "SCHEDULED",
+      homeScore: finished ? res.homeScore : undefined,
+      awayScore: finished ? res.awayScore : undefined,
     };
-  }, [playoff]);
+  }, [resolvedPlayoff, resultsById]);
 
   const homeTeam = useMemo((): TeamDoc | null => {
-    if (!playoff) return null;
+    if (!resolvedPlayoff) return null;
     return {
-      code: playoff.homeCode,
-      nameJa: playoff.home,
-      isPlaceholder: !playoff.homeCode,
+      code: resolvedPlayoff.homeCode,
+      nameJa: resolvedPlayoff.home,
+      isPlaceholder: !resolvedPlayoff.homeCode,
     };
-  }, [playoff]);
+  }, [resolvedPlayoff]);
 
   const awayTeam = useMemo((): TeamDoc | null => {
-    if (!playoff) return null;
+    if (!resolvedPlayoff) return null;
     return {
-      code: playoff.awayCode,
-      nameJa: playoff.away,
-      isPlaceholder: !playoff.awayCode,
+      code: resolvedPlayoff.awayCode,
+      nameJa: resolvedPlayoff.away,
+      isPlaceholder: !resolvedPlayoff.awayCode,
     };
-  }, [playoff]);
+  }, [resolvedPlayoff]);
 
   const kickoffDate = useMemo(() => {
     if (!matchDoc) return null;
@@ -188,12 +268,53 @@ export default function PlayoffMatchPage() {
   const awayFlag = useMemo(() => localFlagSrc(awayTeam), [awayTeam]);
 
   const relatedPlayoffMatches = useMemo(() => {
-    if (!playoff) return [];
+    if (!resolvedPlayoff) return [];
+
+    const matchById = new Map<PlayoffMatchId, (typeof playoffMatches)[number]>(playoffMatches.map((m) => [m.id, m] as const));
+
+    const winnerTeamByMatchId = (matchId: PlayoffMatchId): { name: string; code?: string } | null => {
+      const meta = matchById.get(matchId);
+      const res = resultsById.get(matchId);
+      if (!meta || !res) return null;
+      if (res.status !== "FINISHED") return null;
+      if (typeof res.homeScore !== "number" || typeof res.awayScore !== "number") return null;
+      if (res.homeScore === res.awayScore) {
+        if (res.winner === "HOME") return { name: meta.home, code: meta.homeCode };
+        if (res.winner === "AWAY") return { name: meta.away, code: meta.awayCode };
+        return null;
+      }
+
+      if (res.homeScore > res.awayScore) return { name: meta.home, code: meta.homeCode };
+      return { name: meta.away, code: meta.awayCode };
+    };
+
+    const finalRefs: Partial<Record<PlayoffMatchId, { homeFrom: PlayoffMatchId; awayFrom: PlayoffMatchId }>> = {
+      A3: { homeFrom: "A2", awayFrom: "A1" },
+      B3: { homeFrom: "B1", awayFrom: "B2" },
+      C3: { homeFrom: "C2", awayFrom: "C1" },
+      D3: { homeFrom: "D2", awayFrom: "D1" },
+    };
+
+    const resolveMatch = (m: (typeof playoffMatches)[number]) => {
+      if (m.label !== "決勝") return m;
+      const ref = finalRefs[m.id as PlayoffMatchId];
+      if (!ref) return m;
+      const homeWinner = winnerTeamByMatchId(ref.homeFrom as PlayoffMatchId);
+      const awayWinner = winnerTeamByMatchId(ref.awayFrom as PlayoffMatchId);
+      return {
+        ...m,
+        home: homeWinner?.name ?? m.home,
+        away: awayWinner?.name ?? m.away,
+        homeCode: homeWinner?.code ?? m.homeCode,
+        awayCode: awayWinner?.code ?? m.awayCode,
+      };
+    };
 
     return playoffMatches
-      .filter((m) => m.block === playoff.block && m.id !== playoff.id)
+      .filter((m) => m.block === resolvedPlayoff.block && m.id !== resolvedPlayoff.id)
       .sort((a, b) => new Date(a.kickoffAtIso).getTime() - new Date(b.kickoffAtIso).getTime())
       .map((m) => {
+        const resolved = resolveMatch(m);
         const kickoff = new Date(m.kickoffAtIso);
         const kickoffLabel = kickoff.toLocaleString("ja-JP", {
           year: "numeric",
@@ -202,20 +323,20 @@ export default function PlayoffMatchPage() {
           hour: "2-digit",
           minute: "2-digit",
         });
-        const homeFlag = m.homeCode ? `/国旗/${m.homeCode.toUpperCase()}.png` : null;
-        const awayFlag = m.awayCode ? `/国旗/${m.awayCode.toUpperCase()}.png` : null;
+        const homeFlag = resolved.homeCode ? `/国旗/${resolved.homeCode.toUpperCase()}.png` : null;
+        const awayFlag = resolved.awayCode ? `/国旗/${resolved.awayCode.toUpperCase()}.png` : null;
         return {
           id: m.id,
           href: `/playoff/${encodeURIComponent(m.id)}`,
           kickoffLabel: `${m.label} / ${kickoffLabel}`,
-          homeName: m.home,
-          awayName: m.away,
+          homeName: resolved.home,
+          awayName: resolved.away,
           homeFlag,
           awayFlag,
           status: "SCHEDULED" as const,
         };
       });
-  }, [playoff]);
+  }, [resolvedPlayoff, resultsById]);
 
   const lockInfo = useMemo(() => {
     if (!matchDoc) return null;
@@ -331,8 +452,8 @@ export default function PlayoffMatchPage() {
         match={matchDoc}
         home={homeTeam}
         away={awayTeam}
-        homeName={playoff.home}
-        awayName={playoff.away}
+        homeName={resolvedPlayoff?.home ?? playoff.home}
+        awayName={resolvedPlayoff?.away ?? playoff.away}
         homeFlag={homeFlag}
         awayFlag={awayFlag}
         kickoff={kickoffDate}
