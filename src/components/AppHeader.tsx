@@ -282,9 +282,14 @@ export default function AppHeader() {
             </Link>
           </div>
 
-          <Link className="appDrawerSpecLink" href="/spec" onClick={() => setOpen(false)}>
-            仕様
-          </Link>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <Link className="appDrawerSpecLink" href="/spec" onClick={() => setOpen(false)}>
+              仕様
+            </Link>
+            <Link className="appDrawerSpecLink" href="/admin/top" onClick={() => setOpen(false)}>
+              管理
+            </Link>
+          </div>
         </nav>
       </aside>
     </>
