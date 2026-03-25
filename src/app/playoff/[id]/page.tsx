@@ -38,6 +38,8 @@ export default function PlayoffMatchPage() {
 
   const [resultsById, setResultsById] = useState<Map<string, PlayoffMatchResultDoc>>(new Map());
 
+  const [teamsByCode, setTeamsByCode] = useState<Map<string, TeamDoc>>(new Map());
+
   const [uid, setUid] = useState<string | null>(null);
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
@@ -85,6 +87,25 @@ export default function PlayoffMatchPage() {
     }
     void run();
   }, [playoff?.id]);
+
+  useEffect(() => {
+    async function run() {
+      try {
+        const snap = await getDocs(collection(db, "teams"));
+        const m = new Map<string, TeamDoc>();
+        for (const d of snap.docs) {
+          const t = d.data() as TeamDoc;
+          const code = t.code?.trim()?.toUpperCase();
+          if (!code) continue;
+          m.set(code, t);
+        }
+        setTeamsByCode(m);
+      } catch {
+        setTeamsByCode(new Map());
+      }
+    }
+    void run();
+  }, []);
 
   const resolvedPlayoff = useMemo(() => {
     if (!playoff) return null;
@@ -243,21 +264,27 @@ export default function PlayoffMatchPage() {
 
   const homeTeam = useMemo((): TeamDoc | null => {
     if (!resolvedPlayoff) return null;
+    const code = resolvedPlayoff.homeCode?.trim()?.toUpperCase();
+    const fromDb = code ? teamsByCode.get(code) : undefined;
     return {
+      ...(fromDb ?? null),
       code: resolvedPlayoff.homeCode,
       nameJa: resolvedPlayoff.home,
       isPlaceholder: !resolvedPlayoff.homeCode,
     };
-  }, [resolvedPlayoff]);
+  }, [resolvedPlayoff, teamsByCode]);
 
   const awayTeam = useMemo((): TeamDoc | null => {
     if (!resolvedPlayoff) return null;
+    const code = resolvedPlayoff.awayCode?.trim()?.toUpperCase();
+    const fromDb = code ? teamsByCode.get(code) : undefined;
     return {
+      ...(fromDb ?? null),
       code: resolvedPlayoff.awayCode,
       nameJa: resolvedPlayoff.away,
       isPlaceholder: !resolvedPlayoff.awayCode,
     };
-  }, [resolvedPlayoff]);
+  }, [resolvedPlayoff, teamsByCode]);
 
   const kickoffDate = useMemo(() => {
     if (!matchDoc) return null;

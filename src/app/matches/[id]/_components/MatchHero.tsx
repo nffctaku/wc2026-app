@@ -151,6 +151,9 @@ export default function MatchHero({
               <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{home?.code ?? ""}</div>
             )}
             <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.92)" }}>{homeName}</div>
+            {typeof home?.fifaRank === "number" ? (
+              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(255,255,255,0.72)" }}>FIFA {home.fifaRank}</div>
+            ) : null}
           </div>
 
           <div style={{ textAlign: "center", display: "grid", gap: 2 }}>
@@ -183,6 +186,9 @@ export default function MatchHero({
               <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{away?.code ?? ""}</div>
             )}
             <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.92)" }}>{awayName}</div>
+            {typeof away?.fifaRank === "number" ? (
+              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(255,255,255,0.72)" }}>FIFA {away.fifaRank}</div>
+            ) : null}
           </div>
         </div>
 

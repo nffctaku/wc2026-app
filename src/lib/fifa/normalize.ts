@@ -8,6 +8,7 @@ export type TeamDoc = {
   code?: string;
   nameJa: string;
   flagUrl?: string;
+  fifaRank?: number;
   isPlaceholder?: boolean;
   placeholderKey?: string;
 };
