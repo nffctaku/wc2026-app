@@ -117,6 +117,7 @@ export default function AdminPlayoffResultsPage() {
       [matchId]: {
         homeScore: d[matchId]?.homeScore ?? "",
         awayScore: d[matchId]?.awayScore ?? "",
+        winner: d[matchId]?.winner ?? "",
         ...part,
       },
     }));
