@@ -157,8 +157,15 @@ export default function MatchHero({
             <div style={{ fontWeight: 900, fontSize: 14 }}>{kickoff?.date ?? ""}</div>
             <div style={{ fontWeight: 900, fontSize: 22, lineHeight: 1 }}>{kickoff?.time ?? ""}</div>
             {match.status === "FINISHED" && typeof match.homeScore === "number" && typeof match.awayScore === "number" ? (
-              <div style={{ marginTop: 6, fontWeight: 900, fontSize: 16 }}>
-                {match.homeScore}-{match.awayScore}
+              <div style={{ marginTop: 6, display: "grid", gap: 2, justifyItems: "center" }}>
+                <div style={{ fontWeight: 900, fontSize: 16 }}>
+                  {match.homeScore}-{match.awayScore}
+                </div>
+                {typeof match.homePenScore === "number" && typeof match.awayPenScore === "number" ? (
+                  <div style={{ fontWeight: 900, fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                    PK {match.homePenScore}-{match.awayPenScore}
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

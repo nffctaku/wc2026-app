@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { doc, getDoc } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 
-import { db } from "@/lib/firebase/client";
+import { db, functions } from "@/lib/firebase/client";
 import { subscribeAuth } from "@/lib/firebase/auth";
 
 type AdminLink = {
@@ -18,6 +19,10 @@ export default function AdminTopPage() {
   const [role, setRole] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const [unlockPassword, setUnlockPassword] = useState<string>("");
+  const [unlockBusy, setUnlockBusy] = useState(false);
+  const [unlockError, setUnlockError] = useState<string | null>(null);
+
   const canEdit = useMemo(() => role === "ADMIN", [role]);
 
   useEffect(() => {
@@ -25,6 +30,9 @@ export default function AdminTopPage() {
       setUid(u?.uid ?? null);
       setRole(null);
       setError(null);
+      setUnlockPassword("");
+      setUnlockBusy(false);
+      setUnlockError(null);
     });
   }, []);
 
@@ -40,6 +48,25 @@ export default function AdminTopPage() {
     }
     void run();
   }, [uid]);
+
+  async function onUnlock() {
+    if (!uid || unlockBusy) return;
+    setUnlockBusy(true);
+    setUnlockError(null);
+    try {
+      const fn = httpsCallable<{ password: string }, { ok: boolean }>(functions, "unlockAdmin");
+      const res = await fn({ password: unlockPassword });
+      if (!res.data?.ok) throw new Error("unlock failed");
+      const snap = await getDoc(doc(db, "users", uid));
+      setRole((snap.data() as { role?: string } | undefined)?.role ?? null);
+      setUnlockPassword("");
+    } catch (e) {
+      const anyErr = e as any;
+      setUnlockError(anyErr?.message ? String(anyErr.message) : e instanceof Error ? e.message : String(e));
+    } finally {
+      setUnlockBusy(false);
+    }
+  }
 
   const links: AdminLink[] = [
     { href: "/admin/playoff-results", title: "プレーオフ結果入力", description: "プレーオフのスコア入力・リセット" },
@@ -77,7 +104,42 @@ export default function AdminTopPage() {
         {!uid ? (
           <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>ログインしてください</div>
         ) : !canEdit ? (
-          <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>権限がありません</div>
+          <div style={{ display: "grid", gap: 10 }}>
+            <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>権限がありません</div>
+            <div style={{ display: "grid", gap: 8 }}>
+              <input
+                type="password"
+                value={unlockPassword}
+                onChange={(e) => setUnlockPassword(e.target.value)}
+                placeholder="管理パスワード"
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "rgba(255,255,255,0.96)",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => void onUnlock()}
+                disabled={unlockBusy || !unlockPassword.trim()}
+                style={{
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(255,255,255,0.16)",
+                  background: "rgba(255,255,255,0.10)",
+                  color: "rgba(255,255,255,0.96)",
+                  fontWeight: 900,
+                  cursor: unlockBusy ? "not-allowed" : "pointer",
+                }}
+              >
+                {unlockBusy ? "解除中..." : "解除"}
+              </button>
+              {unlockError ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", color: "rgba(255,255,255,0.92)" }}>{unlockError}</pre> : null}
+            </div>
+          </div>
         ) : (
           <div style={{ display: "grid", gap: 10 }}>
             {links.map((l) => (

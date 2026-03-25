@@ -25,6 +25,9 @@ export type MatchDoc = {
   status: "SCHEDULED" | "FINISHED";
   homeScore?: number;
   awayScore?: number;
+  homePenScore?: number;
+  awayPenScore?: number;
+  winner?: "HOME" | "AWAY";
 };
 
 function toPlaceholderId(raw: string): string {

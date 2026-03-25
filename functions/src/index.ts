@@ -271,6 +271,32 @@ export const backfillPublicUsers = onCall(async (req) => {
   }
 });
 
+export const unlockAdmin = onCall(async (request) => {
+  try {
+    const uid = request.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required");
+
+    const password = (request.data as {password?: unknown} | undefined)?.password;
+    if (typeof password !== "string") throw new HttpsError("invalid-argument", "password is required");
+
+    const expected =
+      (((functionsV1 as any).config?.()?.admin?.password as string | undefined) ?? process.env.ADMIN_PASSWORD);
+    if (!expected) {
+      throw new HttpsError("failed-precondition", "admin password is not configured");
+    }
+
+    if (password !== expected) throw new HttpsError("permission-denied", "invalid password");
+
+    await getFirestore().doc(`users/${uid}`).set({role: "ADMIN" satisfies UserRole}, {merge: true});
+    logger.info("unlockAdmin success", {uid});
+    return {ok: true};
+  } catch (e) {
+    logger.error("unlockAdmin error", e);
+    if (e instanceof HttpsError) throw e;
+    throw new HttpsError("internal", e instanceof Error ? e.message : String(e));
+  }
+});
+
 export const recalcPlayoffPoints = onCall(async (request) => {
   try {
     logger.info("recalcPlayoffPoints called", {

@@ -298,7 +298,11 @@ export default function KnockoutPage() {
                     m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number";
                   const homeScore = hasScore ? String(m.homeScore) : "-";
                   const awayScore = hasScore ? String(m.awayScore) : "-";
-                  const scoreText = hasScore ? `${homeScore}-${awayScore}` : "-";
+                  const pkText =
+                    hasScore && typeof m.homePenScore === "number" && typeof m.awayPenScore === "number"
+                      ? ` (PK ${m.homePenScore}-${m.awayPenScore})`
+                      : "";
+                  const scoreText = hasScore ? `${homeScore}-${awayScore}${pkText}` : "-";
                   const points = pointsByMatchId.get(m.id);
                   const showPoints = hasScore && typeof points === "number";
 

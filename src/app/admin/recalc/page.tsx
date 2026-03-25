@@ -78,7 +78,7 @@ export default function AdminRecalcPage() {
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <Link href="/">← Home</Link>
+        <Link href="/admin/top">← Admin</Link>
         <h1 style={{ margin: 0 }}>Admin Recalc</h1>
       </div>
 

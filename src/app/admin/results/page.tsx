@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -22,6 +23,8 @@ type MatchRow = MatchDoc & { id: string };
 type ScoreDraft = {
   homeScore: string;
   awayScore: string;
+  homePenScore: string;
+  awayPenScore: string;
 };
 
 function formatTs(ts: Timestamp): string {
@@ -97,6 +100,8 @@ export default function AdminResultsPage() {
               typeof m.homeScore === "number" ? String(m.homeScore) : "",
             awayScore:
               typeof m.awayScore === "number" ? String(m.awayScore) : "",
+            homePenScore: typeof m.homePenScore === "number" ? String(m.homePenScore) : "",
+            awayPenScore: typeof m.awayPenScore === "number" ? String(m.awayPenScore) : "",
           };
         }
         setDrafts(nextDrafts);
@@ -121,6 +126,8 @@ export default function AdminResultsPage() {
       [matchId]: {
         homeScore: d[matchId]?.homeScore ?? "",
         awayScore: d[matchId]?.awayScore ?? "",
+        homePenScore: d[matchId]?.homePenScore ?? "",
+        awayPenScore: d[matchId]?.awayPenScore ?? "",
         ...part,
       },
     }));
@@ -131,9 +138,9 @@ export default function AdminResultsPage() {
     const m = matches.find((x) => x.id === matchId);
     if (!m) return;
 
-    const draft = drafts[matchId] ?? { homeScore: "", awayScore: "" };
-    const hs = Number(draft.homeScore);
-    const as = Number(draft.awayScore);
+    const draft = drafts[matchId] ?? { homeScore: "", awayScore: "", homePenScore: "", awayPenScore: "" };
+    const hs = Number(draft.homeScore.trim());
+    const as = Number(draft.awayScore.trim());
 
     if (!Number.isFinite(hs) || !Number.isFinite(as)) {
       setError("スコアは数値で入力してください");
@@ -148,11 +155,40 @@ export default function AdminResultsPage() {
     setError(null);
 
     try {
+      const penNeeded = hs === as;
+      const hpsText = draft.homePenScore.trim();
+      const apsText = draft.awayPenScore.trim();
+      const hps = hpsText === "" ? NaN : Number(hpsText);
+      const aps = apsText === "" ? NaN : Number(apsText);
+
+      if (penNeeded) {
+        if (!Number.isFinite(hps) || !Number.isFinite(aps)) {
+          setError("同点の場合はPKスコアを入力してください");
+          setBusy(false);
+          return;
+        }
+        if (hps < 0 || aps < 0) {
+          setError("PKスコアは0以上で入力してください");
+          setBusy(false);
+          return;
+        }
+        if (hps === aps) {
+          setError("PKスコアは同点にできません");
+          setBusy(false);
+          return;
+        }
+      }
+
+      const winner = !penNeeded ? null : hps > aps ? "HOME" : "AWAY";
+
       await setDoc(
         doc(db, "matches", matchId),
         {
           homeScore: hs,
           awayScore: as,
+          homePenScore: penNeeded ? hps : deleteField(),
+          awayPenScore: penNeeded ? aps : deleteField(),
+          winner: penNeeded ? winner : deleteField(),
           status: "FINISHED",
           resultUpdatedAt: Timestamp.now(),
         },
@@ -162,7 +198,15 @@ export default function AdminResultsPage() {
       setMatches((rows) =>
         rows.map((r) =>
           r.id === matchId
-            ? { ...r, homeScore: hs, awayScore: as, status: "FINISHED" }
+            ? {
+                ...r,
+                homeScore: hs,
+                awayScore: as,
+                homePenScore: penNeeded ? hps : undefined,
+                awayPenScore: penNeeded ? aps : undefined,
+                winner: penNeeded ? (winner as any) : undefined,
+                status: "FINISHED",
+              }
             : r
         )
       );
@@ -178,7 +222,7 @@ export default function AdminResultsPage() {
   return (
     <div style={{ padding: 24, display: "grid", gap: 12 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <Link href="/">← Home</Link>
+        <Link href="/admin/top">← Admin</Link>
         <h1 style={{ margin: 0 }}>Admin Results</h1>
       </div>
 
@@ -221,7 +265,10 @@ export default function AdminResultsPage() {
             </thead>
             <tbody>
               {matches.map((m) => {
-                const d = drafts[m.id] ?? { homeScore: "", awayScore: "" };
+                const d = drafts[m.id] ?? { homeScore: "", awayScore: "", homePenScore: "", awayPenScore: "" };
+                const hs = Number(d.homeScore.trim());
+                const as = Number(d.awayScore.trim());
+                const showPen = Number.isFinite(hs) && Number.isFinite(as) && hs === as;
                 return (
                   <tr key={m.id}>
                     <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{m.matchNumber}</td>
@@ -248,6 +295,26 @@ export default function AdminResultsPage() {
                           style={{ padding: 6, width: 70 }}
                           disabled={busy}
                         />
+                        {showPen ? (
+                          <>
+                            <span style={{ opacity: 0.8 }}>PK</span>
+                            <input
+                              inputMode="numeric"
+                              value={d.homePenScore}
+                              onChange={(e) => setDraft(m.id, { homePenScore: e.target.value })}
+                              style={{ padding: 6, width: 70 }}
+                              disabled={busy}
+                            />
+                            <span>:</span>
+                            <input
+                              inputMode="numeric"
+                              value={d.awayPenScore}
+                              onChange={(e) => setDraft(m.id, { awayPenScore: e.target.value })}
+                              style={{ padding: 6, width: 70 }}
+                              disabled={busy}
+                            />
+                          </>
+                        ) : null}
                       </div>
                     </td>
                     <td style={{ padding: 8, borderBottom: "1px solid #eee" }}>{m.status}</td>
