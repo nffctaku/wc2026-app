@@ -90,23 +90,15 @@ export default function MatchHero({
       style={{
         borderRadius: 0,
         overflow: "hidden",
-        background: "linear-gradient(135deg, #040913 0%, #0b1f3a 45%, #2b1d5f 100%)",
-        color: "#fff",
+        background:
+          "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.72), transparent 56%), linear-gradient(180deg, #fffdf6 0%, #fff3da 100%)",
+        color: "rgba(0,0,0,0.88)",
         position: "relative",
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.14), transparent 46%)",
-          pointerEvents: "none",
-        }}
-      />
-
       <div style={{ position: "relative", padding: 16, display: "grid", gap: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Link href={resolvedBackHref} style={{ color: "rgba(255,255,255,0.92)", textDecoration: "none", fontWeight: 800 }}>
+          <Link href={resolvedBackHref} style={{ color: "rgba(0,0,0,0.72)", textDecoration: "none", fontWeight: 800 }}>
             ←
           </Link>
           <div
@@ -124,7 +116,7 @@ export default function MatchHero({
         </div>
 
         <div style={{ textAlign: "center", display: "grid", gap: 4 }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>
+          <div style={{ fontSize: 12, color: "rgba(0,0,0,0.62)" }}>
             {match.stageNameJa}
             {match.groupNameJa ? ` / ${match.groupNameJa}` : ""}
           </div>
@@ -148,11 +140,11 @@ export default function MatchHero({
                 style={{ width: 76, height: 52, objectFit: "cover", borderRadius: 6 }}
               />
             ) : (
-              <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{home?.code ?? ""}</div>
+              <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{home?.code ?? ""}</div>
             )}
-            <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.92)" }}>{homeName}</div>
+            <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(0,0,0,0.88)" }}>{homeName}</div>
             {typeof home?.fifaRank === "number" ? (
-              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(255,255,255,0.72)" }}>FIFA {home.fifaRank}</div>
+              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(0,0,0,0.55)" }}>FIFA {home.fifaRank}</div>
             ) : null}
           </div>
 
@@ -165,7 +157,7 @@ export default function MatchHero({
                   {match.homeScore}-{match.awayScore}
                 </div>
                 {typeof match.homePenScore === "number" && typeof match.awayPenScore === "number" ? (
-                  <div style={{ fontWeight: 900, fontSize: 12, color: "rgba(255,255,255,0.75)" }}>
+                  <div style={{ fontWeight: 900, fontSize: 12, color: "rgba(0,0,0,0.55)" }}>
                     PK {match.homePenScore}-{match.awayPenScore}
                   </div>
                 ) : null}
@@ -183,11 +175,11 @@ export default function MatchHero({
                 style={{ width: 76, height: 52, objectFit: "cover", borderRadius: 6 }}
               />
             ) : (
-              <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{away?.code ?? ""}</div>
+              <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{away?.code ?? ""}</div>
             )}
-            <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(255,255,255,0.92)" }}>{awayName}</div>
+            <div style={{ fontWeight: 800, fontSize: 12, color: "rgba(0,0,0,0.88)" }}>{awayName}</div>
             {typeof away?.fifaRank === "number" ? (
-              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(255,255,255,0.72)" }}>FIFA {away.fifaRank}</div>
+              <div style={{ fontWeight: 900, fontSize: 11, color: "rgba(0,0,0,0.55)" }}>FIFA {away.fifaRank}</div>
             ) : null}
           </div>
         </div>
@@ -199,7 +191,7 @@ export default function MatchHero({
             gap: 10,
             alignItems: "center",
             paddingTop: 6,
-            color: "rgba(255,255,255,0.88)",
+            color: "rgba(0,0,0,0.72)",
             fontSize: 12,
           }}
         >
@@ -216,18 +208,18 @@ export default function MatchHero({
             style={{
               marginTop: 8,
               paddingTop: 8,
-              borderTop: "1px solid rgba(255,255,255,0.18)",
+              borderTop: "1px solid rgba(0,0,0,0.10)",
               display: "grid",
               gap: 8,
             }}
           >
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
               <div style={{ fontWeight: 900 }}>スコア予想</div>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.70)", fontWeight: 700 }}>{lockedLabel}</div>
+              <div style={{ fontSize: 12, color: "rgba(0,0,0,0.55)", fontWeight: 700 }}>{lockedLabel}</div>
             </div>
 
             {!uid ? <div style={{ marginTop: 2, fontSize: 13 }}>予想の入力にはログインが必要です</div> : null}
-            {predError ? <pre style={{ color: "#ffb4ab", margin: "0" }}>{predError}</pre> : null}
+            {predError ? <pre style={{ color: "#b00020", margin: "0" }}>{predError}</pre> : null}
             {predBusy ? <div style={{ marginTop: 2, fontSize: 13 }}>予想を読込/保存中...</div> : null}
 
             <div
@@ -247,7 +239,7 @@ export default function MatchHero({
                 />
               </div>
 
-              <div style={{ fontWeight: 900, fontSize: 20, color: "rgba(255,255,255,0.85)", paddingBottom: 2 }}>:</div>
+              <div style={{ fontWeight: 900, fontSize: 20, color: "rgba(0,0,0,0.55)", paddingBottom: 2 }}>:</div>
 
               <div style={{ display: "grid", justifyItems: "center", gap: 4, minWidth: 0 }}>
                 <ScoreStepper
@@ -265,9 +257,11 @@ export default function MatchHero({
                 onClick={onSharePrediction}
                 disabled={!uid}
                 style={{
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  background: "rgba(255,255,255,0.10)",
-                  color: "rgba(255,255,255,0.92)",
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  background: "rgba(255,255,255,0.40)",
+                  backdropFilter: "blur(12px) saturate(140%)",
+                  WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                  color: "rgba(0,0,0,0.82)",
                   borderRadius: 999,
                   padding: "10px 12px",
                   fontWeight: 900,
@@ -277,7 +271,9 @@ export default function MatchHero({
               >
                 Xでシェア
               </button>
-              {shareStatus ? <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.78)", textAlign: "center" }}>{shareStatus}</div> : null}
+              {shareStatus ? (
+                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.62)", textAlign: "center" }}>{shareStatus}</div>
+              ) : null}
             </div>
           </div>
 
@@ -292,7 +288,7 @@ export default function MatchHero({
 
           {relatedGroupMatches && relatedGroupMatches.length > 0 ? (
             <div style={{ display: "grid", gap: 8, paddingTop: 10 }}>
-              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>{resolvedRelatedTitle}</div>
+              <div style={{ fontSize: 12, fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{resolvedRelatedTitle}</div>
               <div style={{ display: "grid", gap: 8 }}>
                 {relatedGroupMatches.map((m) => (
                   <Link
@@ -301,17 +297,19 @@ export default function MatchHero({
                     style={{
                       textDecoration: "none",
                       color: "inherit",
-                      background: "rgba(255,255,255,0.06)",
-                      border: "1px solid rgba(255,255,255,0.14)",
+                      background: "rgba(255,255,255,0.40)",
+                      backdropFilter: "blur(12px) saturate(140%)",
+                      WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                      border: "1px solid rgba(0,0,0,0.10)",
                       borderRadius: 12,
                       padding: 10,
                       display: "grid",
                       gap: 6,
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "rgba(255,255,255,0.75)", fontWeight: 800 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "rgba(0,0,0,0.55)", fontWeight: 800 }}>
                       <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.kickoffLabel}</div>
-                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{m.status === "FINISHED" ? "試合終了" : ""}</div>
+                      <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{m.status === "FINISHED" ? "試合終了" : ""}</div>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
@@ -326,7 +324,7 @@ export default function MatchHero({
                         ) : null}
                         <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.homeName}</div>
                       </div>
-                      <div style={{ fontWeight: 900, color: "rgba(255,255,255,0.85)" }}>{m.scoreLabel ?? "vs"}</div>
+                      <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{m.scoreLabel ?? "vs"}</div>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", minWidth: 0 }}>
                         <div style={{ fontWeight: 900, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.awayName}</div>
                         {m.awayFlag ? (

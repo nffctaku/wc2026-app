@@ -612,7 +612,16 @@ export default function MatchDetailPage() {
   }
 
   return (
-    <div style={{ display: "grid", gap: 12, minHeight: "100vh" }}>
+    <div
+      style={{
+        display: "grid",
+        gap: 12,
+        minHeight: "100vh",
+        background:
+          "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.72), transparent 56%), linear-gradient(180deg, #fffdf6 0%, #fff3da 100%)",
+        color: "rgba(0,0,0,0.88)",
+      }}
+    >
       {busy ? (
         <div style={{ padding: 18, fontWeight: 800 }}>
           読込中...
@@ -660,8 +669,8 @@ export default function MatchDetailPage() {
                   padding: "10px 12px",
                   borderRadius: 12,
                   border: "1px solid rgba(0,0,0,0.18)",
-                  background: "#0b1f3a",
-                  color: "#fff",
+                  background: "rgba(255,255,255,0.62)",
+                  color: "rgba(0,0,0,0.88)",
                   fontWeight: 900,
                   cursor: "pointer",
                 }}
@@ -697,9 +706,22 @@ export default function MatchDetailPage() {
                 WebkitOverflowScrolling: "touch",
                 borderRadius: 12,
                 border: "1px solid rgba(0,0,0,0.10)",
+                background: "rgba(255,255,255,0.32)",
+                backdropFilter: "blur(12px) saturate(140%)",
+                WebkitBackdropFilter: "blur(12px) saturate(140%)",
               }}
             >
-              <div style={{ scrollSnapAlign: "start", padding: 12, display: "grid", gap: 10, background: "rgba(255,255,255,0.60)" }}>
+              <div
+                style={{
+                  scrollSnapAlign: "start",
+                  padding: 12,
+                  display: "grid",
+                  gap: 10,
+                  background: "rgba(255,255,255,0.38)",
+                  backdropFilter: "blur(12px) saturate(140%)",
+                  WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                }}
+              >
                 <div style={{ fontWeight: 900, fontSize: 14 }}>コメント</div>
 
                 {commentError ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", color: "#b00020" }}>{commentError}</pre> : null}
@@ -718,7 +740,9 @@ export default function MatchDetailPage() {
                       borderRadius: 12,
                       border: "1px solid rgba(0,0,0,0.18)",
                       fontWeight: 700,
-                      background: "rgba(255,255,255,0.92)",
+                      background: "rgba(255,255,255,0.72)",
+                      backdropFilter: "blur(8px) saturate(140%)",
+                      WebkitBackdropFilter: "blur(8px) saturate(140%)",
                     }}
                   />
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
@@ -759,7 +783,9 @@ export default function MatchDetailPage() {
                           border: "1px solid rgba(0,0,0,0.10)",
                           borderRadius: 12,
                           padding: 10,
-                          background: "rgba(255,255,255,0.92)",
+                          background: "rgba(255,255,255,0.58)",
+                          backdropFilter: "blur(10px) saturate(140%)",
+                          WebkitBackdropFilter: "blur(10px) saturate(140%)",
                           display: "grid",
                           gap: 6,
                         }}

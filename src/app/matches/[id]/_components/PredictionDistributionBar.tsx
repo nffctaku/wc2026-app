@@ -37,7 +37,7 @@ export default function PredictionDistributionBar({
     <div style={{ display: "grid", gap: 6, width: "100%" }}>
       <div style={{ display: "grid", gridTemplateColumns: "42px 1fr 42px", alignItems: "center" }}>
         <div style={{ textAlign: "left", fontWeight: 900, color: "#f4c542" }}>{h}%</div>
-        <div style={{ textAlign: "center", fontWeight: 900, color: "rgba(255,255,255,0.92)" }}>{title}</div>
+        <div style={{ textAlign: "center", fontWeight: 900, color: "rgba(0,0,0,0.72)" }}>{title}</div>
         <div style={{ textAlign: "right", fontWeight: 900, color: "#d93025" }}>{a}%</div>
       </div>
 
@@ -46,8 +46,10 @@ export default function PredictionDistributionBar({
           height: 18,
           borderRadius: 999,
           overflow: "hidden",
-          border: "1px solid rgba(255,255,255,0.22)",
-          background: "rgba(0,0,0,0.18)",
+          border: "1px solid rgba(0,0,0,0.10)",
+          background: "rgba(255,255,255,0.40)",
+          backdropFilter: "blur(10px) saturate(140%)",
+          WebkitBackdropFilter: "blur(10px) saturate(140%)",
           display: "grid",
           gridTemplateColumns: empty ? "1fr 1fr 1fr" : `${normH}% ${normD}% ${normA}%`,
         }}
@@ -57,7 +59,7 @@ export default function PredictionDistributionBar({
         <div style={{ background: "#d93025", opacity: empty ? 0.25 : 1 }} />
       </div>
 
-      <div style={{ textAlign: "center", fontSize: 12, fontWeight: 900, color: "rgba(255,255,255,0.82)" }}>
+      <div style={{ textAlign: "center", fontSize: 12, fontWeight: 900, color: "rgba(0,0,0,0.62)" }}>
         {h}-{d}-{a}（%）
       </div>
     </div>

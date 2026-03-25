@@ -29,8 +29,8 @@ export default function PredictionCard({
   onAwayScoreChange: (value: string) => void;
   onSavePrediction: () => void;
 }) {
-  const textPrimary = "rgba(255,255,255,0.92)";
-  const textMuted = "rgba(255,255,255,0.72)";
+  const textPrimary = "rgba(0,0,0,0.88)";
+  const textMuted = "rgba(0,0,0,0.55)";
   return (
     <section style={{ padding: 4 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
@@ -41,8 +41,8 @@ export default function PredictionCard({
       {!uid ? (
         <div style={{ marginTop: 8, fontSize: 13, color: textMuted }}>予想の入力にはログインが必要です</div>
       ) : null}
-      {predError ? <pre style={{ color: "#ffb4b4", margin: "8px 0 0" }}>{predError}</pre> : null}
-      {predSaved ? <pre style={{ color: "rgba(255,255,255,0.90)", margin: "8px 0 0" }}>{predSaved}</pre> : null}
+      {predError ? <pre style={{ color: "#b00020", margin: "8px 0 0" }}>{predError}</pre> : null}
+      {predSaved ? <pre style={{ color: "rgba(0,0,0,0.72)", margin: "8px 0 0" }}>{predSaved}</pre> : null}
       {predBusy ? <div style={{ marginTop: 8, fontSize: 13, color: textMuted }}>予想を読込/保存中...</div> : null}
 
       <div style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr auto 1fr auto", gap: 8, alignItems: "end" }}>
@@ -86,7 +86,7 @@ export default function PredictionCard({
                 ? "linear-gradient(180deg, #f07a00 0%, #e06a00 100%)"
                 : "rgba(255,255,255,0.22)",
             boxShadow: canEditPrediction && !predBusy ? "0 16px 28px rgba(224, 106, 0, 0.28)" : "none",
-            color: "rgba(255,255,255,0.96)",
+            color: canEditPrediction && !predBusy ? "rgba(255,255,255,0.96)" : "rgba(0,0,0,0.62)",
             fontWeight: 900,
             cursor: canEditPrediction && !predBusy ? "pointer" : "not-allowed",
           }}
