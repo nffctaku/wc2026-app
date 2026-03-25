@@ -82,6 +82,7 @@ export default function MatchDetailPage() {
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
+  const [hasPrediction, setHasPrediction] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   const [relatedGroupMatches, setRelatedGroupMatches] = useState<RelatedMatchCard[]>([]);
@@ -112,9 +113,13 @@ export default function MatchDetailPage() {
 
   useEffect(() => {
     return subscribeAuth((u) => {
-      setUid(u?.uid ?? null);
-      setPredSaved(null);
-      setPredError(null);
+      const nextUid = u?.uid ?? null;
+      setUid(nextUid);
+      if (!nextUid) {
+        setPredSaved(null);
+        setPredError(null);
+        setHasPrediction(false);
+      }
     });
   }, []);
 
@@ -251,7 +256,10 @@ export default function MatchDetailPage() {
 
   useEffect(() => {
     async function run() {
-      if (!uid || !resolvedMatchId) return;
+      if (!uid || !resolvedMatchId) {
+        setHasPrediction(false);
+        return;
+      }
       setPredBusy(true);
       setPredError(null);
       setPredSaved(null);
@@ -261,11 +269,13 @@ export default function MatchDetailPage() {
         if (!snap.exists()) {
           setHomeScore(0);
           setAwayScore(0);
+          setHasPrediction(false);
           lastSavedRef.current = { hs: 0, as: 0 };
           hydratedPredRef.current = true;
           return;
         }
 
+        setHasPrediction(true);
         const p = snap.data() as PredictionDoc;
         const hs = typeof p.homeScore === "number" ? p.homeScore : 0;
         const as = typeof p.awayScore === "number" ? p.awayScore : 0;
@@ -545,6 +555,7 @@ export default function MatchDetailPage() {
       }
 
       await setDoc(ref, base, { merge: true });
+      setHasPrediction(true);
       setPredSaved(`保存しました（${new Date().toLocaleString("ja-JP")}）`);
     } catch (e) {
       setPredError(e instanceof Error ? e.message : String(e));
@@ -649,6 +660,8 @@ export default function MatchDetailPage() {
             uid={uid}
             predError={predError}
             predBusy={predBusy}
+            predSaved={predSaved}
+            hasPrediction={hasPrediction}
             canEditPrediction={canEditPrediction}
             homeScore={homeScore}
             awayScore={awayScore}
@@ -685,8 +698,8 @@ export default function MatchDetailPage() {
                   padding: "10px 12px",
                   borderRadius: 12,
                   border: "1px solid rgba(0,0,0,0.18)",
-                  background: "#fff",
-                  color: "#0b1f3a",
+                  background: "#0b1f3a",
+                  color: "#fff",
                   fontWeight: 900,
                   cursor: "pointer",
                 }}

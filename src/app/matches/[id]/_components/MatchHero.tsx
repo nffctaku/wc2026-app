@@ -40,6 +40,8 @@ export default function MatchHero({
   uid,
   predError,
   predBusy,
+  predSaved,
+  hasPrediction,
   canEditPrediction,
   homeScore,
   awayScore,
@@ -71,6 +73,8 @@ export default function MatchHero({
   uid: string | null;
   predError: string | null;
   predBusy: boolean;
+  predSaved?: string | null;
+  hasPrediction?: boolean;
   canEditPrediction: boolean;
   homeScore: number;
   awayScore: number;
@@ -85,6 +89,7 @@ export default function MatchHero({
 }) {
   const resolvedBackHref = backHref ?? "/results";
   const resolvedRelatedTitle = relatedMatchesTitle ?? "同じグループの他の試合";
+  const predictionStatusLabel = !uid ? null : predBusy ? "保存中" : hasPrediction ? "予想済み" : "未予想";
   return (
     <section
       style={{
@@ -215,7 +220,26 @@ export default function MatchHero({
           >
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
               <div style={{ fontWeight: 900 }}>スコア予想</div>
-              <div style={{ fontSize: 12, color: "rgba(0,0,0,0.55)", fontWeight: 700 }}>{lockedLabel}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {predictionStatusLabel ? (
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 900,
+                      padding: "5px 9px",
+                      borderRadius: 999,
+                      border: "1px solid rgba(0,0,0,0.10)",
+                      background: predBusy ? "rgba(224,106,0,0.95)" : "#0078D4",
+                      color: "rgba(255,255,255,0.96)",
+                      whiteSpace: "nowrap",
+                    }}
+                    title={predSaved ? predSaved : undefined}
+                  >
+                    {predictionStatusLabel}
+                  </div>
+                ) : null}
+                <div style={{ fontSize: 12, color: "rgba(0,0,0,0.55)", fontWeight: 700, whiteSpace: "nowrap" }}>{lockedLabel}</div>
+              </div>
             </div>
 
             {!uid ? <div style={{ marginTop: 2, fontSize: 13 }}>予想の入力にはログインが必要です</div> : null}

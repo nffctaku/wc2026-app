@@ -44,6 +44,7 @@ export default function PlayoffMatchPage() {
   const [predBusy, setPredBusy] = useState(false);
   const [predError, setPredError] = useState<string | null>(null);
   const [predSaved, setPredSaved] = useState<string | null>(null);
+  const [hasPrediction, setHasPrediction] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
   const [homeScore, setHomeScore] = useState<number>(0);
@@ -62,9 +63,13 @@ export default function PlayoffMatchPage() {
 
   useEffect(() => {
     return subscribeAuth((u) => {
-      setUid(u?.uid ?? null);
-      setPredSaved(null);
-      setPredError(null);
+      const nextUid = u?.uid ?? null;
+      setUid(nextUid);
+      if (!nextUid) {
+        setPredSaved(null);
+        setPredError(null);
+        setHasPrediction(false);
+      }
     });
   }, []);
 
@@ -163,6 +168,7 @@ export default function PlayoffMatchPage() {
       if (!uid || !playoff) {
         setHomeScore(0);
         setAwayScore(0);
+        setHasPrediction(false);
         return;
       }
       setPredBusy(true);
@@ -174,11 +180,13 @@ export default function PlayoffMatchPage() {
         if (!snap.exists()) {
           setHomeScore(0);
           setAwayScore(0);
+          setHasPrediction(false);
           lastSavedRef.current = { hs: 0, as: 0 };
           hydratedPredRef.current = true;
           return;
         }
 
+        setHasPrediction(true);
         const p = snap.data() as PlayoffPredictionDoc;
         const hs = typeof p.homeScore === "number" ? p.homeScore : 0;
         const as = typeof p.awayScore === "number" ? p.awayScore : 0;
@@ -417,6 +425,7 @@ export default function PlayoffMatchPage() {
       }
 
       await setDoc(ref, base, { merge: true });
+      setHasPrediction(true);
       setPredSaved(`保存しました（${new Date().toLocaleString("ja-JP")}）`);
     } catch (e) {
       setPredError(e instanceof Error ? e.message : String(e));
@@ -494,6 +503,8 @@ export default function PlayoffMatchPage() {
         uid={uid}
         predError={predError}
         predBusy={predBusy}
+        predSaved={predSaved}
+        hasPrediction={hasPrediction}
         canEditPrediction={canEditPrediction}
         homeScore={homeScore}
         awayScore={awayScore}
