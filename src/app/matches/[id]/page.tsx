@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addDoc,
@@ -39,6 +39,7 @@ type PredictionDoc = {
 type RelatedMatchCard = {
   id: string;
   kickoffLabel: string;
+  kickoffMs: number;
   homeName: string;
   awayName: string;
   homeFlag: string | null;
@@ -70,6 +71,7 @@ type PublicUserDoc = {
 export default function MatchDetailPage() {
   const params = useParams<{ id: string | string[] }>();
   const routeId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const router = useRouter();
   const [resolvedMatchId, setResolvedMatchId] = useState<string | null>(null);
 
   const [uid, setUid] = useState<string | null>(null);
@@ -110,6 +112,7 @@ export default function MatchDetailPage() {
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const groupSlideRef = useRef<HTMLDivElement | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     return subscribeAuth((u) => {
@@ -227,6 +230,7 @@ export default function MatchDetailPage() {
           const homeFlag = localFlagSrc(homeDoc);
           const awayFlag = localFlagSrc(awayDoc);
           const kickoffLabel = `${m.matchNumber} / ${formatTs(m.kickoffAt)}`;
+          const kickoffMs = m.kickoffAt.toDate().getTime();
 
           const scoreLabel =
             m.status === "FINISHED" && typeof m.homeScore === "number" && typeof m.awayScore === "number"
@@ -236,6 +240,7 @@ export default function MatchDetailPage() {
           return {
             id: m.id,
             kickoffLabel,
+            kickoffMs,
             homeName,
             awayName,
             homeFlag,
@@ -253,6 +258,83 @@ export default function MatchDetailPage() {
 
     void run();
   }, [match, resolvedMatchId]);
+
+  const groupMatchNav = useMemo(() => {
+    if (!resolvedMatchId || !match) return { orderedIds: [] as string[], prevId: null as string | null, nextId: null as string | null };
+
+    const entries: Array<{ id: string; kickoffMs: number }> = [
+      { id: resolvedMatchId, kickoffMs: match.kickoffAt.toDate().getTime() },
+      ...relatedGroupMatches.map((m) => ({ id: m.id, kickoffMs: m.kickoffMs })),
+    ];
+
+    const seen = new Set<string>();
+    const unique = entries.filter((e) => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
+    });
+
+    unique.sort((a, b) => a.kickoffMs - b.kickoffMs);
+    const orderedIds = unique.map((e) => e.id);
+    const idx = orderedIds.indexOf(resolvedMatchId);
+    const prevId = idx > 0 ? orderedIds[idx - 1] : null;
+    const nextId = idx >= 0 && idx < orderedIds.length - 1 ? orderedIds[idx + 1] : null;
+    return { orderedIds, prevId, nextId };
+  }, [match, relatedGroupMatches, resolvedMatchId]);
+
+  const groupMatchNavFlags = useMemo(() => {
+    const byId = new Map<string, { homeFlag: string | null; awayFlag: string | null }>();
+    for (const m of relatedGroupMatches) {
+      byId.set(m.id, { homeFlag: m.homeFlag ?? null, awayFlag: m.awayFlag ?? null });
+    }
+    const prev = groupMatchNav.prevId ? byId.get(groupMatchNav.prevId) : undefined;
+    const next = groupMatchNav.nextId ? byId.get(groupMatchNav.nextId) : undefined;
+    return {
+      prevHomeFlag: prev?.homeFlag ?? null,
+      prevAwayFlag: prev?.awayFlag ?? null,
+      nextHomeFlag: next?.homeFlag ?? null,
+      nextAwayFlag: next?.awayFlag ?? null,
+    };
+  }, [groupMatchNav.nextId, groupMatchNav.prevId, relatedGroupMatches]);
+
+  function shouldIgnoreSwipeTarget(target: EventTarget | null): boolean {
+    if (!target || !(target instanceof Element)) return false;
+    const el = target;
+    const tag = el.tagName?.toUpperCase();
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON") return true;
+    if (el.closest("a")) return true;
+    return false;
+  }
+
+  function onTouchStart(e: React.TouchEvent<HTMLDivElement>) {
+    if (shouldIgnoreSwipeTarget(e.target)) return;
+    const t = e.touches[0];
+    if (!t) return;
+    swipeStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+
+  function onTouchEnd(e: React.TouchEvent<HTMLDivElement>) {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+    if (shouldIgnoreSwipeTarget(e.target)) return;
+
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+
+    if (Math.abs(dx) < 55) return;
+    if (Math.abs(dy) > 30) return;
+
+    if (dx < 0) {
+      if (groupMatchNav.nextId) router.push(`/matches/${groupMatchNav.nextId}`);
+      return;
+    }
+    if (dx > 0) {
+      if (groupMatchNav.prevId) router.push(`/matches/${groupMatchNav.prevId}`);
+    }
+  }
 
   useEffect(() => {
     async function run() {
@@ -632,6 +714,8 @@ export default function MatchDetailPage() {
           "radial-gradient(circle at 25% 15%, rgba(255,255,255,0.72), transparent 56%), linear-gradient(180deg, #fffdf6 0%, #fff3da 100%)",
         color: "rgba(0,0,0,0.88)",
       }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
     >
       {busy ? (
         <div style={{ padding: 18, fontWeight: 800 }}>
@@ -670,6 +754,14 @@ export default function MatchDetailPage() {
 
             onSharePrediction={onSharePrediction}
             shareStatus={shareStatus}
+
+            prevHref={groupMatchNav.prevId ? `/matches/${groupMatchNav.prevId}` : undefined}
+            nextHref={groupMatchNav.nextId ? `/matches/${groupMatchNav.nextId}` : undefined}
+
+            prevHomeFlag={groupMatchNavFlags.prevHomeFlag}
+            prevAwayFlag={groupMatchNavFlags.prevAwayFlag}
+            nextHomeFlag={groupMatchNavFlags.nextHomeFlag}
+            nextAwayFlag={groupMatchNavFlags.nextAwayFlag}
           />
 
           <section style={{ padding: "0 16px 16px", display: "grid", gap: 10 }}>

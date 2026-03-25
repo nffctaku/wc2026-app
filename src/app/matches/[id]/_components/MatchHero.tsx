@@ -51,6 +51,13 @@ export default function MatchHero({
   onSharePrediction,
   shareStatus,
 
+  prevHref,
+  nextHref,
+  prevHomeFlag,
+  prevAwayFlag,
+  nextHomeFlag,
+  nextAwayFlag,
+
   relatedGroupMatches,
   relatedMatchesTitle,
 }: {
@@ -83,6 +90,13 @@ export default function MatchHero({
 
   onSharePrediction: () => void | Promise<void>;
   shareStatus: string | null;
+
+  prevHref?: string;
+  nextHref?: string;
+  prevHomeFlag?: string | null;
+  prevAwayFlag?: string | null;
+  nextHomeFlag?: string | null;
+  nextAwayFlag?: string | null;
 
   relatedGroupMatches?: RelatedMatchCard[];
   relatedMatchesTitle?: string;
@@ -205,8 +219,126 @@ export default function MatchHero({
             {match.cityNameJa ? `（${match.cityNameJa}）` : ""}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <Countdown targetMs={kickoffMs} />
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "44px 1fr 44px",
+              alignItems: "center",
+              gap: 10,
+              width: "100%",
+            }}
+          >
+            {prevHref ? (
+              <div style={{ display: "grid", justifyItems: "center", gap: 4 }}>
+                <Link
+                  href={prevHref}
+                  aria-label="前の試合へ"
+                  style={{
+                    justifySelf: "start",
+                    textDecoration: "none",
+                    width: 44,
+                    height: 44,
+                    borderRadius: 999,
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    background: "rgba(255,255,255,0.46)",
+                    backdropFilter: "blur(12px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                    color: "rgba(0,0,0,0.78)",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 900,
+                    fontSize: 18,
+                    lineHeight: "44px",
+                    textAlign: "center",
+                  }}
+                >
+                  ＜
+                </Link>
+                {prevHomeFlag || prevAwayFlag ? (
+                  <div style={{ display: "flex", gap: 4, height: 14, alignItems: "center" }}>
+                    {prevHomeFlag ? (
+                      <img
+                        src={prevHomeFlag}
+                        alt=""
+                        width={18}
+                        height={12}
+                        style={{ width: 18, height: 12, objectFit: "cover", borderRadius: 3 }}
+                      />
+                    ) : null}
+                    {prevAwayFlag ? (
+                      <img
+                        src={prevAwayFlag}
+                        alt=""
+                        width={18}
+                        height={12}
+                        style={{ width: 18, height: 12, objectFit: "cover", borderRadius: 3 }}
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div style={{ height: 14 }} />
+                )}
+              </div>
+            ) : (
+              <div />
+            )}
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <Countdown targetMs={kickoffMs} />
+            </div>
+            {nextHref ? (
+              <div style={{ display: "grid", justifyItems: "center", gap: 4 }}>
+                <Link
+                  href={nextHref}
+                  aria-label="次の試合へ"
+                  style={{
+                    justifySelf: "end",
+                    textDecoration: "none",
+                    width: 44,
+                    height: 44,
+                    borderRadius: 999,
+                    border: "1px solid rgba(0,0,0,0.12)",
+                    background: "rgba(255,255,255,0.46)",
+                    backdropFilter: "blur(12px) saturate(140%)",
+                    WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                    color: "rgba(0,0,0,0.78)",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 900,
+                    fontSize: 18,
+                    lineHeight: "44px",
+                    textAlign: "center",
+                  }}
+                >
+                  ＞
+                </Link>
+                {nextHomeFlag || nextAwayFlag ? (
+                  <div style={{ display: "flex", gap: 4, height: 14, alignItems: "center" }}>
+                    {nextHomeFlag ? (
+                      <img
+                        src={nextHomeFlag}
+                        alt=""
+                        width={18}
+                        height={12}
+                        style={{ width: 18, height: 12, objectFit: "cover", borderRadius: 3 }}
+                      />
+                    ) : null}
+                    {nextAwayFlag ? (
+                      <img
+                        src={nextAwayFlag}
+                        alt=""
+                        width={18}
+                        height={12}
+                        style={{ width: 18, height: 12, objectFit: "cover", borderRadius: 3 }}
+                      />
+                    ) : null}
+                  </div>
+                ) : (
+                  <div style={{ height: 14 }} />
+                )}
+              </div>
+            ) : (
+              <div />
+            )}
           </div>
 
           <div
@@ -275,39 +407,39 @@ export default function MatchHero({
               </div>
             </div>
 
-            <div style={{ display: "grid", gap: 6, paddingTop: 6 }}>
-              <button
-                type="button"
-                onClick={onSharePrediction}
-                disabled={!uid}
-                style={{
-                  border: "1px solid rgba(0,0,0,0.18)",
-                  background: "rgba(255,255,255,0.40)",
-                  backdropFilter: "blur(12px) saturate(140%)",
-                  WebkitBackdropFilter: "blur(12px) saturate(140%)",
-                  color: "rgba(0,0,0,0.82)",
-                  borderRadius: 999,
-                  padding: "10px 12px",
-                  fontWeight: 900,
-                  cursor: !uid ? "not-allowed" : "pointer",
-                  opacity: !uid ? 0.55 : 1,
-                }}
-              >
-                Xでシェア
-              </button>
-              {shareStatus ? (
-                <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.62)", textAlign: "center" }}>{shareStatus}</div>
-              ) : null}
+            <div style={{ paddingTop: 6 }}>
+              <PredictionDistributionBar
+                title="現在の勝敗予測"
+                homePct={distribution.homeWinPct}
+                drawPct={distribution.drawPct}
+                awayPct={distribution.awayWinPct}
+              />
             </div>
           </div>
 
-          <div style={{ paddingTop: 6 }}>
-            <PredictionDistributionBar
-              title="現在の勝敗予測"
-              homePct={distribution.homeWinPct}
-              drawPct={distribution.drawPct}
-              awayPct={distribution.awayWinPct}
-            />
+          <div style={{ display: "grid", gap: 6, paddingTop: 6 }}>
+            <button
+              type="button"
+              onClick={onSharePrediction}
+              disabled={!uid}
+              style={{
+                border: "1px solid rgba(0,0,0,0.18)",
+                background: "rgba(255,255,255,0.40)",
+                backdropFilter: "blur(12px) saturate(140%)",
+                WebkitBackdropFilter: "blur(12px) saturate(140%)",
+                color: "rgba(0,0,0,0.82)",
+                borderRadius: 999,
+                padding: "10px 12px",
+                fontWeight: 900,
+                cursor: !uid ? "not-allowed" : "pointer",
+                opacity: !uid ? 0.55 : 1,
+              }}
+            >
+              Xでシェア
+            </button>
+            {shareStatus ? (
+              <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.62)", textAlign: "center" }}>{shareStatus}</div>
+            ) : null}
           </div>
 
           {relatedGroupMatches && relatedGroupMatches.length > 0 ? (
