@@ -75,6 +75,7 @@ export default function AdminTopPage() {
     { href: "/admin/public-users", title: "公開ユーザー", description: "publicUsers の管理" },
     { href: "/admin/import", title: "インポート", description: "データ取り込み" },
     { href: "/admin/backfill", title: "バックフィル", description: "データ補完" },
+    { href: "/spec", title: "仕様", description: "仕様ページ" },
   ];
 
   return (

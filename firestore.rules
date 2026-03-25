@@ -45,6 +45,34 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    match /matchComments/{matchId} {
+      allow read: if true;
+      allow write: if false;
+
+      match /comments/{commentId} {
+        allow read: if true;
+
+        allow create: if signedIn() &&
+          request.resource.data.uid == request.auth.uid &&
+          request.resource.data.matchId == matchId &&
+          request.resource.data.keys().hasAll(['uid', 'matchId', 'text', 'createdAt']);
+
+        allow delete: if signedIn() &&
+          (isAdmin() || resource.data.uid == request.auth.uid);
+
+        allow update: if false;
+
+        match /reactions/{uid} {
+          allow read: if true;
+
+          allow create: if signedIn() && request.auth.uid == uid;
+          allow delete: if signedIn() && request.auth.uid == uid;
+
+          allow update: if false;
+        }
+      }
+    }
+
     match /tournamentConfig/{docId} {
       allow read: if true;
       allow write: if isAdmin();

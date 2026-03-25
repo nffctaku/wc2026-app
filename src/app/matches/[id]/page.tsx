@@ -4,13 +4,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
   limit,
   onSnapshot,
   query,
+  orderBy,
   setDoc,
   Timestamp,
   where,
@@ -44,6 +47,26 @@ type RelatedMatchCard = {
   scoreLabel?: string;
 };
 
+type MatchCommentDoc = {
+  uid: string;
+  matchId: string;
+  text: string;
+  createdAt: Timestamp;
+};
+
+type MatchCommentRow = MatchCommentDoc & { id: string };
+
+type CommentReactionState = {
+  count: number;
+  me: boolean;
+};
+
+type PublicUserDoc = {
+  nickname?: string;
+  photoURL?: string | null;
+  idNo?: number | null;
+};
+
 export default function MatchDetailPage() {
   const params = useParams<{ id: string | string[] }>();
   const routeId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -63,6 +86,15 @@ export default function MatchDetailPage() {
 
   const [relatedGroupMatches, setRelatedGroupMatches] = useState<RelatedMatchCard[]>([]);
 
+  const [comments, setComments] = useState<MatchCommentRow[]>([]);
+  const [commentDraft, setCommentDraft] = useState<string>("");
+  const [commentBusy, setCommentBusy] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [commentUsers, setCommentUsers] = useState<Map<string, PublicUserDoc>>(new Map());
+  const [commentReactions, setCommentReactions] = useState<Map<string, CommentReactionState>>(new Map());
+
+  const commentReactionUnsubsRef = useRef<Map<string, () => void>>(new Map());
+
   const [distribution, setDistribution] = useState<PredictionDistribution>({
     homeWinPct: 0,
     drawPct: 0,
@@ -76,6 +108,8 @@ export default function MatchDetailPage() {
   const lastSavedRef = useRef<{ hs: number; as: number } | null>(null);
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const groupSlideRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     return subscribeAuth((u) => {
       setUid(u?.uid ?? null);
@@ -83,6 +117,10 @@ export default function MatchDetailPage() {
       setPredError(null);
     });
   }, []);
+
+  useEffect(() => {
+    setCommentError(null);
+  }, [uid]);
 
   useEffect(() => {
     async function run() {
@@ -291,6 +329,115 @@ export default function MatchDetailPage() {
     );
   }, [resolvedMatchId]);
 
+  useEffect(() => {
+    if (!resolvedMatchId) {
+      setComments([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, "matchComments", resolvedMatchId, "comments"),
+      orderBy("createdAt", "desc"),
+      limit(50)
+    );
+
+    return onSnapshot(
+      q,
+      (snap) => {
+        const rows: MatchCommentRow[] = snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as MatchCommentDoc),
+        }));
+        setComments(rows);
+      },
+      (e) => {
+        setCommentError(e instanceof Error ? e.message : String(e));
+        setComments([]);
+      }
+    );
+  }, [resolvedMatchId]);
+
+  useEffect(() => {
+    async function run() {
+      if (comments.length === 0) return;
+      const uidSet = new Set<string>();
+      for (const c of comments) {
+        if (typeof c.uid === "string" && c.uid) uidSet.add(c.uid);
+      }
+      const uidList = Array.from(uidSet);
+      if (uidList.length === 0) return;
+
+      const missing = uidList.filter((u) => !commentUsers.has(u));
+      if (missing.length === 0) return;
+
+      try {
+        const snaps = await Promise.all(missing.map((u) => getDoc(doc(db, "publicUsers", u))));
+        setCommentUsers((prev) => {
+          const next = new Map(prev);
+          for (let i = 0; i < missing.length; i++) {
+            const u = missing[i]!;
+            const s = snaps[i]!;
+            if (s.exists()) next.set(u, s.data() as PublicUserDoc);
+            else next.set(u, {});
+          }
+          return next;
+        });
+      } catch {
+        // ignore
+      }
+    }
+
+    void run();
+  }, [comments, commentUsers]);
+
+  useEffect(() => {
+    if (!resolvedMatchId) {
+      setCommentReactions(new Map());
+      return;
+    }
+
+    const active = new Set<string>(comments.map((c) => c.id));
+
+    for (const [commentId, unsub] of commentReactionUnsubsRef.current) {
+      if (!active.has(commentId)) {
+        unsub();
+        commentReactionUnsubsRef.current.delete(commentId);
+      }
+    }
+
+    for (const c of comments) {
+      if (commentReactionUnsubsRef.current.has(c.id)) continue;
+
+      const q = query(collection(db, "matchComments", resolvedMatchId, "comments", c.id, "reactions"));
+      const unsub = onSnapshot(
+        q,
+        (snap) => {
+          const count = snap.size;
+          const me = !!uid && snap.docs.some((d) => d.id === uid);
+          setCommentReactions((prev) => {
+            const next = new Map(prev);
+            next.set(c.id, { count, me });
+            return next;
+          });
+        },
+        () => {
+          setCommentReactions((prev) => {
+            const next = new Map(prev);
+            next.set(c.id, { count: 0, me: false });
+            return next;
+          });
+        }
+      );
+
+      commentReactionUnsubsRef.current.set(c.id, unsub);
+    }
+
+    return () => {
+      for (const [, unsub] of commentReactionUnsubsRef.current) unsub();
+      commentReactionUnsubsRef.current.clear();
+    };
+  }, [comments, resolvedMatchId, uid]);
+
   const lockInfo = useMemo(() => {
     if (!match) return null;
     const now = new Date();
@@ -300,6 +447,61 @@ export default function MatchDetailPage() {
   }, [match]);
 
   const canEditPrediction = !!uid && !!match && !!lockInfo && !lockInfo.locked;
+
+  async function onPostComment() {
+    if (!uid || !resolvedMatchId) {
+      setCommentError("ログインが必要です");
+      return;
+    }
+    const text = commentDraft.trim();
+    if (!text) return;
+    if (text.length > 280) {
+      setCommentError("コメントは280文字以内にしてください");
+      return;
+    }
+
+    setCommentBusy(true);
+    setCommentError(null);
+    try {
+      await addDoc(collection(db, "matchComments", resolvedMatchId, "comments"), {
+        uid,
+        matchId: resolvedMatchId,
+        text,
+        createdAt: Timestamp.now(),
+      } satisfies MatchCommentDoc);
+      setCommentDraft("");
+    } catch (e) {
+      setCommentError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setCommentBusy(false);
+    }
+  }
+
+  async function onDeleteComment(commentId: string, commentUid: string) {
+    if (!uid || !resolvedMatchId) return;
+    if (uid !== commentUid) return;
+    try {
+      await deleteDoc(doc(db, "matchComments", resolvedMatchId, "comments", commentId));
+    } catch (e) {
+      setCommentError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function onToggleReaction(commentId: string) {
+    if (!uid || !resolvedMatchId) return;
+    const state = commentReactions.get(commentId);
+    try {
+      if (state?.me) {
+        await deleteDoc(doc(db, "matchComments", resolvedMatchId, "comments", commentId, "reactions", uid));
+      } else {
+        await setDoc(doc(db, "matchComments", resolvedMatchId, "comments", commentId, "reactions", uid), {
+          createdAt: Timestamp.now(),
+        });
+      }
+    } catch (e) {
+      setCommentError(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   async function onSavePrediction() {
     if (!uid || !resolvedMatchId || !match || !lockInfo) return;
@@ -446,9 +648,241 @@ export default function MatchDetailPage() {
 
             onSharePrediction={onSharePrediction}
             shareStatus={shareStatus}
-
-            relatedGroupMatches={relatedGroupMatches}
           />
+
+          <section style={{ padding: "0 16px 16px", display: "grid", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => groupSlideRef.current?.scrollTo({ left: 0, behavior: "smooth" })}
+                style={{
+                  flex: "1 1 0",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  background: "#0b1f3a",
+                  color: "#fff",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                コメント
+              </button>
+              <button
+                type="button"
+                onClick={() => groupSlideRef.current?.scrollTo({ left: groupSlideRef.current?.clientWidth ?? 0, behavior: "smooth" })}
+                style={{
+                  flex: "1 1 0",
+                  padding: "10px 12px",
+                  borderRadius: 12,
+                  border: "1px solid rgba(0,0,0,0.18)",
+                  background: "#fff",
+                  color: "#0b1f3a",
+                  fontWeight: 900,
+                  cursor: "pointer",
+                }}
+              >
+                他の試合
+              </button>
+            </div>
+
+            <div
+              ref={groupSlideRef}
+              style={{
+                display: "grid",
+                gridAutoFlow: "column",
+                gridAutoColumns: "100%",
+                overflowX: "auto",
+                scrollSnapType: "x mandatory",
+                WebkitOverflowScrolling: "touch",
+                borderRadius: 12,
+                border: "1px solid rgba(0,0,0,0.10)",
+              }}
+            >
+              <div style={{ scrollSnapAlign: "start", padding: 12, display: "grid", gap: 10, background: "rgba(255,255,255,0.60)" }}>
+                <div style={{ fontWeight: 900, fontSize: 14 }}>コメント</div>
+
+                {commentError ? <pre style={{ margin: 0, whiteSpace: "pre-wrap", color: "#b00020" }}>{commentError}</pre> : null}
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  <textarea
+                    value={commentDraft}
+                    onChange={(e) => setCommentDraft(e.target.value)}
+                    placeholder={uid ? "コメントを書く（280文字まで）" : "ログインするとコメントできます"}
+                    disabled={!uid || commentBusy}
+                    rows={3}
+                    style={{
+                      width: "100%",
+                      resize: "vertical",
+                      padding: 10,
+                      borderRadius: 12,
+                      border: "1px solid rgba(0,0,0,0.18)",
+                      fontWeight: 700,
+                      background: "rgba(255,255,255,0.92)",
+                    }}
+                  />
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.55)" }}>{commentDraft.trim().length}/280</div>
+                    <button
+                      type="button"
+                      onClick={() => void onPostComment()}
+                      disabled={!uid || commentBusy || !commentDraft.trim()}
+                      style={{
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        border: "1px solid rgba(0,0,0,0.18)",
+                        background: "#0b1f3a",
+                        color: "#fff",
+                        fontWeight: 900,
+                        cursor: !uid || commentBusy ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      {commentBusy ? "送信中..." : "投稿"}
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gap: 10 }}>
+                  {comments.length === 0 ? (
+                    <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.55)" }}>まだコメントがありません</div>
+                  ) : null}
+
+                  {comments.map((c) => {
+                    const u = commentUsers.get(c.uid);
+                    const name = (u?.nickname ?? "").trim() || `User`;
+                    const timeLabel = c.createdAt ? c.createdAt.toDate().toLocaleString("ja-JP") : "";
+                    const r = commentReactions.get(c.id) ?? { count: 0, me: false };
+                    return (
+                      <div
+                        key={c.id}
+                        style={{
+                          border: "1px solid rgba(0,0,0,0.10)",
+                          borderRadius: 12,
+                          padding: 10,
+                          background: "rgba(255,255,255,0.92)",
+                          display: "grid",
+                          gap: 6,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                            {u?.photoURL ? (
+                              <img
+                                src={u.photoURL}
+                                alt=""
+                                width={28}
+                                height={28}
+                                style={{ width: 28, height: 28, borderRadius: 999, objectFit: "cover" }}
+                              />
+                            ) : (
+                              <div style={{ width: 28, height: 28, borderRadius: 999, background: "rgba(0,0,0,0.10)" }} />
+                            )}
+                            <div style={{ fontWeight: 900, fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(0,0,0,0.55)" }}>{timeLabel}</div>
+                            <button
+                              type="button"
+                              onClick={() => void onToggleReaction(c.id)}
+                              disabled={!uid}
+                              style={{
+                                border: "1px solid rgba(0,0,0,0.18)",
+                                background: r.me ? "rgba(255, 215, 0, 0.20)" : "transparent",
+                                borderRadius: 10,
+                                padding: "6px 8px",
+                                fontWeight: 900,
+                                fontSize: 12,
+                                cursor: uid ? "pointer" : "not-allowed",
+                              }}
+                            >
+                              🎉 {r.count}
+                            </button>
+                            {uid && uid === c.uid ? (
+                              <button
+                                type="button"
+                                onClick={() => void onDeleteComment(c.id, c.uid)}
+                                style={{
+                                  border: "1px solid rgba(0,0,0,0.18)",
+                                  background: "transparent",
+                                  borderRadius: 10,
+                                  padding: "6px 8px",
+                                  fontWeight: 900,
+                                  fontSize: 12,
+                                  cursor: "pointer",
+                                }}
+                              >
+                                削除
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", fontWeight: 700, fontSize: 13 }}>{c.text}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div style={{ scrollSnapAlign: "start", padding: 12, display: "grid", gap: 10, background: "rgba(255,255,255,0.60)" }}>
+                <div style={{ fontWeight: 900, fontSize: 14 }}>同じグループの他の試合</div>
+
+                {relatedGroupMatches.length === 0 ? (
+                  <div style={{ fontSize: 12, fontWeight: 800, color: "rgba(0,0,0,0.55)" }}>対象の試合がありません</div>
+                ) : null}
+
+                <div style={{ display: "grid", gap: 8 }}>
+                  {relatedGroupMatches.map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/matches/${m.id}`}
+                      style={{
+                        textDecoration: "none",
+                        color: "inherit",
+                        background: "rgba(255,255,255,0.92)",
+                        border: "1px solid rgba(0,0,0,0.10)",
+                        borderRadius: 12,
+                        padding: 10,
+                        display: "grid",
+                        gap: 6,
+                      }}
+                    >
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 10, fontSize: 12, color: "rgba(0,0,0,0.55)", fontWeight: 800 }}>
+                        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.kickoffLabel}</div>
+                        <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.70)" }}>{m.status === "FINISHED" ? "試合終了" : ""}</div>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                          {m.homeFlag ? (
+                            <img
+                              src={m.homeFlag}
+                              alt=""
+                              width={24}
+                              height={16}
+                              style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 4, flex: "0 0 auto" }}
+                            />
+                          ) : null}
+                          <div style={{ fontWeight: 900, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.homeName}</div>
+                        </div>
+                        <div style={{ fontWeight: 900, color: "rgba(0,0,0,0.70)" }}>{m.scoreLabel ?? "vs"}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", minWidth: 0 }}>
+                          <div style={{ fontWeight: 900, textAlign: "right", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{m.awayName}</div>
+                          {m.awayFlag ? (
+                            <img
+                              src={m.awayFlag}
+                              alt=""
+                              width={24}
+                              height={16}
+                              style={{ width: 24, height: 16, objectFit: "cover", borderRadius: 4, flex: "0 0 auto" }}
+                            />
+                          ) : null}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
         </>
       ) : null}
 
