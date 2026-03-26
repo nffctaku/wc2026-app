@@ -100,6 +100,7 @@ const menuItems: MenuItem[] = [
   { label: "決勝トーナメント", href: "/knockout", icon: "table" },
   { label: "日程", href: "/schedule", icon: "table" },
   { label: "マイページ", href: "/me", icon: "user" },
+  { label: "利用規約", href: "/terms", icon: "mail" },
 ];
 
 function MenuIcon({ name }: { name: MenuItem["icon"] }) {
