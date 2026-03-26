@@ -98,6 +98,7 @@ const menuItems: MenuItem[] = [
   { label: "プレーオフ", href: "/playoff", icon: "table" },
   { label: "グループステージ", href: "/results", icon: "flag" },
   { label: "決勝トーナメント", href: "/knockout", icon: "table" },
+  { label: "日程", href: "/schedule", icon: "table" },
   { label: "マイページ", href: "/me", icon: "user" },
 ];
 

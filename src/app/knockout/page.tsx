@@ -82,6 +82,9 @@ export default function KnockoutPage() {
   const [teams, setTeams] = useState<Map<string, TeamDoc>>(new Map());
   const [uid, setUid] = useState<string | null>(null);
   const [pointsByMatchId, setPointsByMatchId] = useState<Map<string, number>>(new Map());
+  const [predictionByMatchId, setPredictionByMatchId] = useState<Map<string, { homeScore: number; awayScore: number }>>(
+    new Map(),
+  );
   const [selectedStage, setSelectedStage] = useState<string>("");
 
   function pointsBadge(points: number) {
@@ -162,6 +165,31 @@ export default function KnockoutPage() {
         setPointsByMatchId(m);
       } catch {
         setPointsByMatchId(new Map());
+      }
+    }
+
+    void run();
+  }, [uid]);
+
+  useEffect(() => {
+    async function run() {
+      if (!uid) {
+        setPredictionByMatchId(new Map());
+        return;
+      }
+
+      try {
+        const predSnap = await getDocs(query(collection(db, "predictions"), where("uid", "==", uid)));
+        const m = new Map<string, { homeScore: number; awayScore: number }>();
+        for (const d of predSnap.docs) {
+          const data = d.data() as { matchId?: string; homeScore?: number; awayScore?: number };
+          if (typeof data.matchId === "string" && typeof data.homeScore === "number" && typeof data.awayScore === "number") {
+            m.set(data.matchId, { homeScore: data.homeScore, awayScore: data.awayScore });
+          }
+        }
+        setPredictionByMatchId(m);
+      } catch {
+        setPredictionByMatchId(new Map());
       }
     }
 
@@ -305,6 +333,7 @@ export default function KnockoutPage() {
                   const scoreText = hasScore ? `${homeScore}-${awayScore}${pkText}` : "-";
                   const points = pointsByMatchId.get(m.id);
                   const showPoints = hasScore && typeof points === "number";
+                  const pred = predictionByMatchId.get(m.id);
 
                   return (
                     <Link
@@ -419,6 +448,25 @@ export default function KnockoutPage() {
                             <span style={{ fontSize: 16, fontWeight: 900 }}>{scoreText}</span>
                             {showPoints ? pointsBadge(points) : null}
                           </div>
+                        ) : pred ? (
+                          <span
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              padding: "6px 10px",
+                              borderRadius: 999,
+                              border: "1px solid rgba(255,255,255,0.18)",
+                              background: "#0078D4",
+                              fontSize: 12,
+                              fontWeight: 900,
+                              color: "#fff",
+                              whiteSpace: "nowrap",
+                              fontVariantNumeric: "tabular-nums",
+                            }}
+                          >
+                            {pred.homeScore}-{pred.awayScore}
+                          </span>
                         ) : (
                           <span
                             style={{
